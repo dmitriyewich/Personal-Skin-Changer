@@ -22,39 +22,38 @@ local new = imgui.new
 encoding.default = 'CP1251'
 u8 = encoding.UTF8
 
-local updlink = 'https://www.dropbox.com/s/5ld03207tjp8qx9/updatefskin.json?dl=1' -- автообновление, удалите всё что в ''
-local invalidID = 'https://www.dropbox.com/s/b9l408093niu2sa/invalidID.txt?dl=0' -- незанятые иды
-	-- imgui_text_color('{FFFFFF}Hello, {bf3434}World!{FFFFFF}Hello, {bf3434}World!{FFFFFF}Hello, {bf3434}World!{FFFFFF}Hello, {bf3434}World!{FFFFFF}Hello, {bf3434}World!{FFFFFF}Hello, {bf3434}World!{FFFFFF}Hello, {bf3434}World!{FFFFFF}Hello, {bf3434}World!', true)
+local updlink = 'https://raw.githubusercontent.com/dmitriyewich/Personal-Skin-Changer/main/update.json' -- Р°РІС‚РѕРѕР±РЅРѕРІР»РµРЅРёРµ, СѓРґР°Р»РёС‚Рµ РІСЃС‘ С‡С‚Рѕ РІ ''
+local invalidID = 'https://www.dropbox.com/s/b9l408093niu2sa/invalidID.txt?dl=0' -- РЅРµР·Р°РЅСЏС‚С‹Рµ РёРґС‹
 
 changelog = u8[[
 	{FFFFFF}v0.1
-{ccccd3}Релиз.
+{ccccd3}Р РµР»РёР·.
 	{FFFFFF}v0.2 
-{ccccd3}Почему-то хук менял только скин локального игрока, добавил другой, теперь заменяет скины других игроков.
+{ccccd3}РџРѕС‡РµРјСѓ-С‚Рѕ С…СѓРє РјРµРЅСЏР» С‚РѕР»СЊРєРѕ СЃРєРёРЅ Р»РѕРєР°Р»СЊРЅРѕРіРѕ РёРіСЂРѕРєР°, РґРѕР±Р°РІРёР» РґСЂСѓРіРѕР№, С‚РµРїРµСЂСЊ Р·Р°РјРµРЅСЏРµС‚ СЃРєРёРЅС‹ РґСЂСѓРіРёС… РёРіСЂРѕРєРѕРІ.
 	{FFFFFF}v0.3
-{ccccd3}Теперь не надо умирать\спавниться. Скин меняется сразу после привязки. (Но после отвязки скина всё так же необходимо умиреть\заспавниться\сменить зону стрима)
+{ccccd3}РўРµРїРµСЂСЊ РЅРµ РЅР°РґРѕ СѓРјРёСЂР°С‚СЊ\СЃРїР°РІРЅРёС‚СЊСЃСЏ. РЎРєРёРЅ РјРµРЅСЏРµС‚СЃСЏ СЃСЂР°Р·Сѓ РїРѕСЃР»Рµ РїСЂРёРІСЏР·РєРё. (РќРѕ РїРѕСЃР»Рµ РѕС‚РІСЏР·РєРё СЃРєРёРЅР° РІСЃС‘ С‚Р°Рє Р¶Рµ РЅРµРѕР±С…РѕРґРёРјРѕ СѓРјРёСЂРµС‚СЊ\Р·Р°СЃРїР°РІРЅРёС‚СЊСЃСЏ\СЃРјРµРЅРёС‚СЊ Р·РѕРЅСѓ СЃС‚СЂРёРјР°)
 	{FFFFFF}v0.4
 {ccccd3}Hotfix 
 	{FFFFFF}v0.5
-{ccccd3}Незанятые иды можно узнать в текстовом файле в группе вк(или по кнопке в конце истории изменений). Вместо них добавлен предпросмотр стандартных скинов и новых скинов, которые вы привязали.
+{ccccd3}РќРµР·Р°РЅСЏС‚С‹Рµ РёРґС‹ РјРѕР¶РЅРѕ СѓР·РЅР°С‚СЊ РІ С‚РµРєСЃС‚РѕРІРѕРј С„Р°Р№Р»Рµ РІ РіСЂСѓРїРїРµ РІРє(РёР»Рё РїРѕ РєРЅРѕРїРєРµ РІ РєРѕРЅС†Рµ РёСЃС‚РѕСЂРёРё РёР·РјРµРЅРµРЅРёР№). Р’РјРµСЃС‚Рѕ РЅРёС… РґРѕР±Р°РІР»РµРЅ РїСЂРµРґРїСЂРѕСЃРјРѕС‚СЂ СЃС‚Р°РЅРґР°СЂС‚РЅС‹С… СЃРєРёРЅРѕРІ Рё РЅРѕРІС‹С… СЃРєРёРЅРѕРІ, РєРѕС‚РѕСЂС‹Рµ РІС‹ РїСЂРёРІСЏР·Р°Р»Рё.
 	{FFFFFF}v0.6
-{ccccd3}Переведен конфиг на json, проблемы с точкой в нике нет. Сделал сортировку новых скинов по возрастанию ида. 
+{ccccd3}РџРµСЂРµРІРµРґРµРЅ РєРѕРЅС„РёРі РЅР° json, РїСЂРѕР±Р»РµРјС‹ СЃ С‚РѕС‡РєРѕР№ РІ РЅРёРєРµ РЅРµС‚. РЎРґРµР»Р°Р» СЃРѕСЂС‚РёСЂРѕРІРєСѓ РЅРѕРІС‹С… СЃРєРёРЅРѕРІ РїРѕ РІРѕР·СЂР°СЃС‚Р°РЅРёСЋ РёРґР°. 
 	{FFFFFF}v0.7
-{ccccd3}Добавлено автообновление(по умолчанию выключено), и мелкие дополнения\исправления. {FFFFFF}Если вы не хотите получать обновление в настройках отключите эту функцию или в файле скрипта замените содержимое 25 строки на local updlink = ''
+{ccccd3}Р”РѕР±Р°РІР»РµРЅРѕ Р°РІС‚РѕРѕР±РЅРѕРІР»РµРЅРёРµ(РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ РІС‹РєР»СЋС‡РµРЅРѕ), Рё РјРµР»РєРёРµ РґРѕРїРѕР»РЅРµРЅРёСЏ\РёСЃРїСЂР°РІР»РµРЅРёСЏ. {FFFFFF}Р•СЃР»Рё РІС‹ РЅРµ С…РѕС‚РёС‚Рµ РїРѕР»СѓС‡Р°С‚СЊ РѕР±РЅРѕРІР»РµРЅРёРµ РІ РЅР°СЃС‚СЂРѕР№РєР°С… РѕС‚РєР»СЋС‡РёС‚Рµ СЌС‚Сѓ С„СѓРЅРєС†РёСЋ РёР»Рё РІ С„Р°Р№Р»Рµ СЃРєСЂРёРїС‚Р° Р·Р°РјРµРЅРёС‚Рµ СЃРѕРґРµСЂР¶РёРјРѕРµ 25 СЃС‚СЂРѕРєРё РЅР° local updlink = ''
 	{FFFFFF}v0.8
-{ccccd3}Перевел скрипт на {FFFFFF}mimgui{ccccd3}. Мелкие фиксы, улучшения.
+{ccccd3}РџРµСЂРµРІРµР» СЃРєСЂРёРїС‚ РЅР° {FFFFFF}mimgui{ccccd3}. РњРµР»РєРёРµ С„РёРєСЃС‹, СѓР»СѓС‡С€РµРЅРёСЏ.
 	{FFFFFF}v0.9
-{ccccd3}Ребрендинг. Теперь скрипт называется {FFFFFF}Personal Skin Changer{ccccd3}(всместо Очередной фейкскин). При отсутвии необходимых библиотек скрипт сам их скачает. Мелкие фиксы, улучшения.	
+{ccccd3}Р РµР±СЂРµРЅРґРёРЅРі. РўРµРїРµСЂСЊ СЃРєСЂРёРїС‚ РЅР°Р·С‹РІР°РµС‚СЃСЏ {FFFFFF}Personal Skin Changer{ccccd3}(РІСЃРјРµСЃС‚Рѕ РћС‡РµСЂРµРґРЅРѕР№ С„РµР№РєСЃРєРёРЅ). РџСЂРё РѕС‚СЃСѓС‚РІРёРё РЅРµРѕР±С…РѕРґРёРјС‹С… Р±РёР±Р»РёРѕС‚РµРє СЃРєСЂРёРїС‚ СЃР°Рј РёС… СЃРєР°С‡Р°РµС‚. РњРµР»РєРёРµ С„РёРєСЃС‹, СѓР»СѓС‡С€РµРЅРёСЏ.	
 	{FFFFFF}v1.0
-{ccccd3}При отвязки скина возвращается скин который был до привязки. Добавил в настройки смену команды активации скрипта. Мелкие фиксы.
+{ccccd3}РџСЂРё РѕС‚РІСЏР·РєРё СЃРєРёРЅР° РІРѕР·РІСЂР°С‰Р°РµС‚СЃСЏ СЃРєРёРЅ РєРѕС‚РѕСЂС‹Р№ Р±С‹Р» РґРѕ РїСЂРёРІСЏР·РєРё. Р”РѕР±Р°РІРёР» РІ РЅР°СЃС‚СЂРѕР№РєРё СЃРјРµРЅСѓ РєРѕРјР°РЅРґС‹ Р°РєС‚РёРІР°С†РёРё СЃРєСЂРёРїС‚Р°. РњРµР»РєРёРµ С„РёРєСЃС‹.
 	{FFFFFF}v1.0.1
-{ccccd3}Микрофиксы
+{ccccd3}РњРёРєСЂРѕС„РёРєСЃС‹
 	{FFFFFF}v1.0.2 
-{ccccd3}Микрофиксы. Появились новые зависимости LFS и ZipLua, они нужны чтобы распаковать архив mimgui-v1.7.0.zip(скачивается напрямую с гитхаба), если не установлен mimgui.	
+{ccccd3}РњРёРєСЂРѕС„РёРєСЃС‹. РџРѕСЏРІРёР»РёСЃСЊ РЅРѕРІС‹Рµ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё LFS Рё ZipLua, РѕРЅРё РЅСѓР¶РЅС‹ С‡С‚РѕР±С‹ СЂР°СЃРїР°РєРѕРІР°С‚СЊ Р°СЂС…РёРІ mimgui-v1.7.0.zip(СЃРєР°С‡РёРІР°РµС‚СЃСЏ РЅР°РїСЂСЏРјСѓСЋ СЃ РіРёС‚С…Р°Р±Р°), РµСЃР»Рё РЅРµ СѓСЃС‚Р°РЅРѕРІР»РµРЅ mimgui.	
 	{FFFFFF}v1.0.3 
-{ccccd3}Микрофиксы.
+{ccccd3}РњРёРєСЂРѕС„РёРєСЃС‹.
 	{FFFFFF}v1.0.4 
-{ccccd3}Микрофиксы.
+{ccccd3}РњРёРєСЂРѕС„РёРєСЃС‹. РР·РјРµРЅРµРЅРёРµ СЃСЃС‹Р»РєРё РЅР° РѕР±РЅРѕРІР»РµРЅРёРµ. РџСЂРѕРІРµСЂРєР° РёРґРµС‚ СЃ github.
 ]]
 
 local function isarray(t, emptyIsObject)
@@ -263,8 +262,8 @@ local updatestatustest = u8''
 local updatestatusonof = u8''
 local saveskintext = u8''
 local changecmdtext = u8''
-if doesFileExist("moonloader/config/fskin.json") then
-    local f = io.open("moonloader/config/fskin.json")
+if doesFileExist("moonloader/config/Personal Skin Changer.json") then
+    local f = io.open("moonloader/config/Personal Skin Changer.json")
     config = decodeJson(f:read("*a"))
     f:close()
 else
@@ -278,11 +277,11 @@ else
 			["changelog"] = true,
 			["cmd"] = "fskin";
         },
-        ["skinslast"] = { -- ид скина до привязки, пока такой костыль
+        ["skinslast"] = { -- РёРґ СЃРєРёРЅР° РґРѕ РїСЂРёРІСЏР·РєРё, РїРѕРєР° С‚Р°РєРѕР№ РєРѕСЃС‚С‹Р»СЊ
             ["Name_Nick"] = 313;
         }
 	}
-    savejson(convertTableToJsonString(config), "moonloader/config/fskin.json")
+    savejson(convertTableToJsonString(config), "moonloader/config/Personal Skin Changer.json")
 end
 
 function sampGetPlayerIdByNickname(nick)
@@ -375,7 +374,7 @@ function apply_custom_style()
 end
 
 imgui.OnInitialize(function() -- Called once
-	apply_custom_style() -- применим кастомный стиль
+	apply_custom_style() -- РїСЂРёРјРµРЅРёРј РєР°СЃС‚РѕРјРЅС‹Р№ СЃС‚РёР»СЊ
 	-- Find all installed fonts
 	local search, file = findFirstFile(getFolderPath(0x14) .. '\\*.ttf')
 	while file do
@@ -553,10 +552,10 @@ local function imgui_text_color(text, wrapped)
 	end
 end
 
-main_window = imgui.new.bool(false) -- основное окно, по-умолчанию выключено
-local autoupdateState = config.settings.autoupdate -- автообновление
-local autoupdateStatev = imgui.new.bool(config.settings.autoupdate) -- тоже автообновление
-changelog_window_state = imgui.new.bool(false) -- окно истории изменений
+main_window = imgui.new.bool(false) -- РѕСЃРЅРѕРІРЅРѕРµ РѕРєРЅРѕ, РїРѕ-СѓРјРѕР»С‡Р°РЅРёСЋ РІС‹РєР»СЋС‡РµРЅРѕ
+local autoupdateState = config.settings.autoupdate -- Р°РІС‚РѕРѕР±РЅРѕРІР»РµРЅРёРµ
+local autoupdateStatev = imgui.new.bool(config.settings.autoupdate) -- С‚РѕР¶Рµ Р°РІС‚РѕРѕР±РЅРѕРІР»РµРЅРёРµ
+changelog_window_state = imgui.new.bool(false) -- РѕРєРЅРѕ РёСЃС‚РѕСЂРёРё РёР·РјРµРЅРµРЅРёР№
 local nick = imgui.new.char[128]('')
 local idskin = imgui.new.char[128]('')
 local cmdbuffer = imgui.new.char[128](config.settings.cmd)
@@ -571,25 +570,21 @@ function(one)
   	imgui.SetNextWindowSize(imgui.ImVec2(400, 460), imgui.Cond.FirstUseEver)
 	imgui.Begin(fa.ICON_FA_ID_BADGE .. u8' ##mimgui ', main_window, imgui.WindowFlags.NoCollapse + imgui.WindowFlags.NoResize + imgui.WindowFlags.NoMove)
 	imgui.Separator()
-	-- imgui_text_wrapped(imgui.ImVec4(1.0, 0.0, 0.0, 1.0) --[[red color]], 'Hello, World!')
-	-- imgui_text_color('{FFFFFF}Hello, {bf3434}World!{FFFFFF}Hello, {bf3434}World!{FFFFFF}Hello, {bf3434}World!{FFFFFF}Hello, {bf3434}World!{FFFFFF}Hello, {bf3434}World!{FFFFFF}Hello, {bf3434}World!{FFFFFF}Hello, {bf3434}World!{FFFFFF}Hello, {bf3434}World!', true)
 	imgui.SetCursorPosX((imgui.GetWindowWidth() - 374) / 2)  
-	-- imgui.PushTextureID(png0)
 	imgui.Image(logo, imgui.ImVec2(374, 28))
-	-- imgui.SetTexID()
 	if imgui.IsItemHovered() then
 		imgui.BeginTooltip()
 		imgui.PushTextWrapPos(600)
-		imgui.TextUnformatted(fa.ICON_FA_COPYRIGHT .. u8"dmitriyewich aka Валерий Дмитриевич.\nРаспространение допускается только с указанием автора или ссылки на пост в вк")
+		imgui.TextUnformatted(fa.ICON_FA_COPYRIGHT .. u8"dmitriyewich aka Р’Р°Р»РµСЂРёР№ Р”РјРёС‚СЂРёРµРІРёС‡.\nР Р°СЃРїСЂРѕСЃС‚СЂР°РЅРµРЅРёРµ РґРѕРїСѓСЃРєР°РµС‚СЃСЏ С‚РѕР»СЊРєРѕ СЃ СѓРєР°Р·Р°РЅРёРµРј Р°РІС‚РѕСЂР° РёР»Рё СЃСЃС‹Р»РєРё РЅР° РїРѕСЃС‚ РІ РІРє")
 		imgui.PopTextWrapPos()
 		imgui.EndTooltip()
 	end	
 	imgui.Separator()
-	imgui.Text(u8' Введите ник')
+	imgui.Text(u8' Р’РІРµРґРёС‚Рµ РЅРёРє')
 	imgui.SameLine()
 	imgui.PushItemWidth(174)
 	local buffer_size = ffi.sizeof(nick)
-	imgui.InputTextWithHint(u8'##Введите ник3', u8'Nick_Name', nick, ffi.sizeof(nick) - 1, imgui.InputTextFlags.AutoSelectAll)
+	imgui.InputTextWithHint(u8'##Р’РІРµРґРёС‚Рµ РЅРёРє3', u8'Nick_Name', nick, ffi.sizeof(nick) - 1, imgui.InputTextFlags.AutoSelectAll)
 	imgui.PopItemWidth()
 	imgui.SameLine()
 	imgui.Text(u8'ID skin')
@@ -597,8 +592,8 @@ function(one)
 	imgui.PushItemWidth(47)
 	imgui.InputTextWithHint(u8'##ID skin', u8'74', idskin, ffi.sizeof(idskin) - 1, imgui.InputTextFlags.CharsDecimal + imgui.InputTextFlags.AutoSelectAll)
 	imgui.PopItemWidth()
-	local allChars, SkinsRaius = getAllChars(), {}	-- функция получение идов и ников игроков в радиусе от игрока
-	local radius = 25 --Радиус действия, по умолчанию - 25 метров
+	local allChars, SkinsRaius = getAllChars(), {}	-- С„СѓРЅРєС†РёСЏ РїРѕР»СѓС‡РµРЅРёРµ РёРґРѕРІ Рё РЅРёРєРѕРІ РёРіСЂРѕРєРѕРІ РІ СЂР°РґРёСѓСЃРµ РѕС‚ РёРіСЂРѕРєР°
+	local radius = 25 --Р Р°РґРёСѓСЃ РґРµР№СЃС‚РІРёСЏ, РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ - 25 РјРµС‚СЂРѕРІ
     local myPosX, myPosY, myPosZ = getCharCoordinates(PLAYER_PED)
     for _, ped in ipairs(allChars) do
         local result, id = sampGetPlayerIdByCharHandle(ped)
@@ -608,9 +603,9 @@ function(one)
         end
     end
 	imgui.PushItemWidth(200)
-	imgui.Text(u8' Ближайший игрок')
+	imgui.Text(u8' Р‘Р»РёР¶Р°Р№С€РёР№ РёРіСЂРѕРє')
 	imgui.SameLine()
-	if imgui.Combo(u8'##Ближайший игрок', combo, SkinsRaiusTable, #SkinsRaius) then -- выбор игрока в радиусе от игрока
+	if imgui.Combo(u8'##Р‘Р»РёР¶Р°Р№С€РёР№ РёРіСЂРѕРє', combo, SkinsRaiusTable, #SkinsRaius) then -- РІС‹Р±РѕСЂ РёРіСЂРѕРєР° РІ СЂР°РґРёСѓСЃРµ РѕС‚ РёРіСЂРѕРєР°
 		for i = 0, #SkinsRaius do
 			if combo[0] == i then
 					nickcombo = SkinsRaius[i + 1]
@@ -619,41 +614,41 @@ function(one)
 		end
 	end
 	imgui.SameLine()
-	imgui.TextQuestion(fa.ICON_FA_QUESTION .. u8" ", u8"Выбрав ник он автоматически вставится в окно ввода ника\nНики выводятся из игроков находящихся в радиусе 25 метров")	
+	imgui.TextQuestion(fa.ICON_FA_QUESTION .. u8" ", u8"Р’С‹Р±СЂР°РІ РЅРёРє РѕРЅ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё РІСЃС‚Р°РІРёС‚СЃСЏ РІ РѕРєРЅРѕ РІРІРѕРґР° РЅРёРєР°\nРќРёРєРё РІС‹РІРѕРґСЏС‚СЃСЏ РёР· РёРіСЂРѕРєРѕРІ РЅР°С…РѕРґСЏС‰РёС…СЃСЏ РІ СЂР°РґРёСѓСЃРµ 25 РјРµС‚СЂРѕРІ")	
 	imgui.PopItemWidth()		
 	imgui.SetCursorPosX((imgui.GetWindowWidth() - 370) / 2)
-	if imgui.Button(u8'Привязать скин к имени', imgui.ImVec2(370, 30)) then
-		config.skins[ffi.string(nick)] = ffi.string(idskin) -- запоминание привязанного ника к иду
+	if imgui.Button(u8'РџСЂРёРІСЏР·Р°С‚СЊ СЃРєРёРЅ Рє РёРјРµРЅРё', imgui.ImVec2(370, 30)) then
+		config.skins[ffi.string(nick)] = ffi.string(idskin) -- Р·Р°РїРѕРјРёРЅР°РЅРёРµ РїСЂРёРІСЏР·Р°РЅРЅРѕРіРѕ РЅРёРєР° Рє РёРґСѓ
 		if ffi.string(nick) ~= nil and ffi.string(idskin) ~= nil then
 			if not config.skinslast[ffi.string(nick)] then
 				if ffi.string(nick) == sampGetPlayerNickname(select(2, sampGetPlayerIdByCharHandle(PLAYER_PED))) then
 					modelId = getCharModel(PLAYER_PED)
-					config.skinslast[ffi.string(nick)] = modelId -- запоминание начального скина у игрока до привязки
+					config.skinslast[ffi.string(nick)] = modelId -- Р·Р°РїРѕРјРёРЅР°РЅРёРµ РЅР°С‡Р°Р»СЊРЅРѕРіРѕ СЃРєРёРЅР° Сѓ РёРіСЂРѕРєР° РґРѕ РїСЂРёРІСЏР·РєРё
 				end
 				if ffi.string(nick) ~= sampGetPlayerNickname(select(2, sampGetPlayerIdByCharHandle(PLAYER_PED))) then
 					nameid = sampGetPlayerIdByNickname(ffi.string(nick))
 					result, pped = sampGetCharHandleBySampPlayerId(nameid)
 					if result then
 						mid = getCharModel(pped)
-						config.skinslast[ffi.string(nick)] = mid -- запоминание начального скина у другого игрока до привязки
+						config.skinslast[ffi.string(nick)] = mid -- Р·Р°РїРѕРјРёРЅР°РЅРёРµ РЅР°С‡Р°Р»СЊРЅРѕРіРѕ СЃРєРёРЅР° Сѓ РґСЂСѓРіРѕРіРѕ РёРіСЂРѕРєР° РґРѕ РїСЂРёРІСЏР·РєРё
 					end
 				end
 			end
-			savejson(convertTableToJsonString(config), "moonloader/config/fskin.json") -- сохранение в конфиг json привязанного ника к иду			
-			lua_thread.create(function() saveskintext = u8""..u8:decode(ffi.string(nick))..u8' - '..u8:decode(ffi.string(idskin))..u8' успешно сохранено'; wait(2574); saveskintext = u8''; end)
+			savejson(convertTableToJsonString(config), "moonloader/config/Personal Skin Changer.json") -- СЃРѕС…СЂР°РЅРµРЅРёРµ РІ РєРѕРЅС„РёРі json РїСЂРёРІСЏР·Р°РЅРЅРѕРіРѕ РЅРёРєР° Рє РёРґСѓ			
+			lua_thread.create(function() saveskintext = u8""..u8:decode(ffi.string(nick))..u8' - '..u8:decode(ffi.string(idskin))..u8' СѓСЃРїРµС€РЅРѕ СЃРѕС…СЂР°РЅРµРЅРѕ'; wait(2574); saveskintext = u8''; end)
 			for k, v in pairs(config.skins) do
 				local nametoid = sampGetPlayerIdByNickname(k)
 				changeSkin(nametoid, v)
 			end
 		else
-			lua_thread.create(function() saveskintext = u8'Введи свой никнейм или другого игрока и ID скина!'; wait(2574); saveskintext = u8''; end)	
+			lua_thread.create(function() saveskintext = u8'Р’РІРµРґРё СЃРІРѕР№ РЅРёРєРЅРµР№Рј РёР»Рё РґСЂСѓРіРѕРіРѕ РёРіСЂРѕРєР° Рё ID СЃРєРёРЅР°!'; wait(2574); saveskintext = u8''; end)	
 		end	
 	end
 	imgui.CenterText(u8""..saveskintext)
-	if imgui.CollapsingHeader(u8'Привязанные скины') then
+	if imgui.CollapsingHeader(u8'РџСЂРёРІСЏР·Р°РЅРЅС‹Рµ СЃРєРёРЅС‹') then
 		for q, w in pairs(config.skins) do
-			imgui.CenterText(u8""..q.. u8' - Скин: '..w)
-			if imgui.IsItemClicked(1) then -- ПКМ - Отвязать скин от ника
+			imgui.CenterText(u8""..q.. u8' - РЎРєРёРЅ: '..w)
+			if imgui.IsItemClicked(1) then -- РџРљРњ - РћС‚РІСЏР·Р°С‚СЊ СЃРєРёРЅ РѕС‚ РЅРёРєР°
 				config.skins[q] = nil
 			for k, v in pairs(config.skinslast) do
 				local nametoid = sampGetPlayerIdByNickname(k)
@@ -664,12 +659,12 @@ function(one)
 				local nametoid = sampGetPlayerIdByNickname(k)
 				changeSkin(nametoid, v)
 			end				
-				savejson(convertTableToJsonString(config), "moonloader/config/fskin.json")				
+				savejson(convertTableToJsonString(config), "moonloader/config/Personal Skin Changer.json")				
 			end 			
 			if imgui.IsItemHovered() then
 				imgui.BeginTooltip()
 				imgui.PushTextWrapPos(600)
-				imgui.TextUnformatted(u8"ЛКМ - Скопировать ник\nПКМ - Отвязать скин от ника\nПри отвязке вернется последний скин перед привязкой.")
+				imgui.TextUnformatted(u8"Р›РљРњ - РЎРєРѕРїРёСЂРѕРІР°С‚СЊ РЅРёРє\nРџРљРњ - РћС‚РІСЏР·Р°С‚СЊ СЃРєРёРЅ РѕС‚ РЅРёРєР°\nРџСЂРё РѕС‚РІСЏР·РєРµ РІРµСЂРЅРµС‚СЃСЏ РїРѕСЃР»РµРґРЅРёР№ СЃРєРёРЅ РїРµСЂРµРґ РїСЂРёРІСЏР·РєРѕР№.")
 				imgui.PopTextWrapPos()
 				imgui.EndTooltip()
 			end
@@ -681,8 +676,8 @@ function(one)
 		end
 	end	
 	
-	if imgui.CollapsingHeader(u8'Предпросмотр скинов') then
-		if imgui.CollapsingHeader(u8'Стандартные скины') then
+	if imgui.CollapsingHeader(u8'РџСЂРµРґРїСЂРѕСЃРјРѕС‚СЂ СЃРєРёРЅРѕРІ') then
+		if imgui.CollapsingHeader(u8'РЎС‚Р°РЅРґР°СЂС‚РЅС‹Рµ СЃРєРёРЅС‹') then
 		local standartskin = 1 
 			for i = 1, 311, 1 do
 				if isModelInCdimage(i) then
@@ -699,7 +694,7 @@ function(one)
 			end		
 		end
 		
-		if imgui.CollapsingHeader(u8'Новые скины') then
+		if imgui.CollapsingHeader(u8'РќРѕРІС‹Рµ СЃРєРёРЅС‹') then
 		listedNotDuplicate = {}
 		notduplicate = {}
 		for _, v in pairs(config.skins) do
@@ -712,7 +707,7 @@ function(one)
 			if imgui.IsItemHovered() then
 				imgui.BeginTooltip()
 				imgui.PushTextWrapPos(600)
-					imgui.TextUnformatted(u8"Добавляются при привязке скина к нику\nНезанятые иды можно посмотреть по кнопке в истории изменений\n" .. fa.ICON_FA_BOLT .. u8"Необходимо учесть, что без Open Limit Adjuster или fastman92 limit adjuster под скины можно использовать только с 1 по 799 ид(которые не заняты)")
+					imgui.TextUnformatted(u8"Р”РѕР±Р°РІР»СЏСЋС‚СЃСЏ РїСЂРё РїСЂРёРІСЏР·РєРµ СЃРєРёРЅР° Рє РЅРёРєСѓ\nРќРµР·Р°РЅСЏС‚С‹Рµ РёРґС‹ РјРѕР¶РЅРѕ РїРѕСЃРјРѕС‚СЂРµС‚СЊ РїРѕ РєРЅРѕРїРєРµ РІ РёСЃС‚РѕСЂРёРё РёР·РјРµРЅРµРЅРёР№\n" .. fa.ICON_FA_BOLT .. u8"РќРµРѕР±С…РѕРґРёРјРѕ СѓС‡РµСЃС‚СЊ, С‡С‚Рѕ Р±РµР· Open Limit Adjuster РёР»Рё fastman92 limit adjuster РїРѕРґ СЃРєРёРЅС‹ РјРѕР¶РЅРѕ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ С‚РѕР»СЊРєРѕ СЃ 1 РїРѕ 799 РёРґ(РєРѕС‚РѕСЂС‹Рµ РЅРµ Р·Р°РЅСЏС‚С‹)")
 				imgui.PopTextWrapPos()
 				imgui.EndTooltip()
 			end
@@ -738,21 +733,21 @@ function(one)
 		end
 	end	
 	
-	if imgui.CollapsingHeader(u8'Настройки') then
-		if config.settings.autoupdate == true then updatestatusonof = u8'Включено' else updatestatusonof = u8'Выключено' end
+	if imgui.CollapsingHeader(u8'РќР°СЃС‚СЂРѕР№РєРё') then
+		if config.settings.autoupdate == true then updatestatusonof = u8'Р’РєР»СЋС‡РµРЅРѕ' else updatestatusonof = u8'Р’С‹РєР»СЋС‡РµРЅРѕ' end
 		imgui.SetCursorPosX((imgui.GetWindowWidth() - 200) / 2)		
-		imgui.Text(string.format(u8"Автообновление: %s", updatestatusonof))
+		imgui.Text(string.format(u8"РђРІС‚РѕРѕР±РЅРѕРІР»РµРЅРёРµ: %s", updatestatusonof))
 		imgui.SameLine()
 		if TBDonHomka.ToggleButton("Test2##2", autoupdateStatev) then 
 			config.settings.autoupdate = not config.settings.autoupdate
 			if config.settings.autoupdate then 
 				config.settings.autoupdate = true
-				savejson(convertTableToJsonString(config), "moonloader/config/fskin.json")
+				savejson(convertTableToJsonString(config), "moonloader/config/Personal Skin Changer.json")
 				autoupdate(updlink,'##nil',updlink)		
 			else 
 				config.settings.autoupdate = false
 				updatestatustest = u8''					
-				savejson(convertTableToJsonString(config), "moonloader/config/fskin.json")	
+				savejson(convertTableToJsonString(config), "moonloader/config/Personal Skin Changer.json")	
 			end 
 		end
 		
@@ -761,55 +756,55 @@ function(one)
 		imgui.PushItemWidth(100)
 		if imgui.InputText(u8'', cmdbuffer, buffer_size - 1, imgui.InputTextFlags.AutoSelectAll) then
 			config.settings.cmd = ffi.string(cmdbuffer)
-            -- savejson(convertTableToJsonString(config), "moonloader/config/fskin.json")	
+            -- savejson(convertTableToJsonString(config), "moonloader/config/Personal Skin Changer.json")	
         end
 			if imgui.IsItemHovered() then
 				imgui.BeginTooltip()
 				imgui.PushTextWrapPos(600)
-					imgui.TextUnformatted(u8'Чтобы изменить команду активации\nвведите команду без "/"')
+					imgui.TextUnformatted(u8'Р§С‚РѕР±С‹ РёР·РјРµРЅРёС‚СЊ РєРѕРјР°РЅРґСѓ Р°РєС‚РёРІР°С†РёРё\nРІРІРµРґРёС‚Рµ РєРѕРјР°РЅРґСѓ Р±РµР· "/"')
 				imgui.PopTextWrapPos()
 				imgui.EndTooltip()
 			end		
 		imgui.PopItemWidth() 
         imgui.SameLine()
-        if imgui.Button(u8'Сохранить команду', imgui.ImVec2(130, 0)) then
+        if imgui.Button(u8'РЎРѕС…СЂР°РЅРёС‚СЊ РєРѕРјР°РЅРґСѓ', imgui.ImVec2(130, 0)) then
 			config.settings.cmd = ffi.string(cmdbuffer)
-			savejson(convertTableToJsonString(config), "moonloader/config/fskin.json")
+			savejson(convertTableToJsonString(config), "moonloader/config/Personal Skin Changer.json")
 			sampUnregisterChatCommand('fskin')
 			sampRegisterChatCommand(config.settings.cmd, function() main_window[0] = not main_window[0] end)
         if ffi.string(cmdbuffer) == nil or ffi.string(cmdbuffer) == '' or ffi.string(cmdbuffer) == ' ' or ffi.string(cmdbuffer):find('/.+') then
-				changecmdtext = u8'Поле ввода пустое или содержит символ "/"\nВведите команду без "/" '
+				changecmdtext = u8'РџРѕР»Рµ РІРІРѕРґР° РїСѓСЃС‚РѕРµ РёР»Рё СЃРѕРґРµСЂР¶РёС‚ СЃРёРјРІРѕР» "/"\nР’РІРµРґРёС‚Рµ РєРѕРјР°РЅРґСѓ Р±РµР· "/" '
 				config.settings.cmd = 'fskin'
-				savejson(convertTableToJsonString(config), "moonloader/config/fskin.json")
+				savejson(convertTableToJsonString(config), "moonloader/config/Personal Skin Changer.json")
 			else
 				changecmdtext = u8''
 			end
         end
 		imgui.CenterText(u8""..changecmdtext)
 		imgui.SetCursorPosX((imgui.GetWindowWidth() - 325) / 2)
-		if imgui.Button(u8'История\nизменений', imgui.ImVec2(100, 0)) then
+		if imgui.Button(u8'РСЃС‚РѕСЂРёСЏ\nРёР·РјРµРЅРµРЅРёР№', imgui.ImVec2(100, 0)) then
 			changelog_window_state[0] = not changelog_window_state[0]
 		end
 		imgui.SameLine()
-		if imgui.Button(u8'Проверить\nобновление', imgui.ImVec2(100, 0)) then
+		if imgui.Button(u8'РџСЂРѕРІРµСЂРёС‚СЊ\nРѕР±РЅРѕРІР»РµРЅРёРµ', imgui.ImVec2(100, 0)) then
 			autoupdate(updlink,'##nil',updlink)
 		end	
 			if imgui.IsItemHovered() then
 				imgui.BeginTooltip()
 				imgui.PushTextWrapPos(600)
-					imgui.TextUnformatted(u8"Нужно будет заново прописать команду активации скрипта")
+					imgui.TextUnformatted(u8"РќСѓР¶РЅРѕ Р±СѓРґРµС‚ Р·Р°РЅРѕРІРѕ РїСЂРѕРїРёСЃР°С‚СЊ РєРѕРјР°РЅРґСѓ Р°РєС‚РёРІР°С†РёРё СЃРєСЂРёРїС‚Р°")
 				imgui.PopTextWrapPos()
 				imgui.EndTooltip()
 			end				
 		imgui.SameLine()
-		if imgui.Button(u8'Перезапустить\nскрипт', imgui.ImVec2(100, 0)) then
-			savejson(convertTableToJsonString(config), "moonloader/config/fskin.json")
+		if imgui.Button(u8'РџРµСЂРµР·Р°РїСѓСЃС‚РёС‚СЊ\nСЃРєСЂРёРїС‚', imgui.ImVec2(100, 0)) then
+			savejson(convertTableToJsonString(config), "moonloader/config/Personal Skin Changer.json")
 			thisScript():reload()
 		end
 			if imgui.IsItemHovered() then
 				imgui.BeginTooltip()
 				imgui.PushTextWrapPos(600)
-					imgui.TextUnformatted(u8"Нужно будет заново прописать команду активации скрипта")
+					imgui.TextUnformatted(u8"РќСѓР¶РЅРѕ Р±СѓРґРµС‚ Р·Р°РЅРѕРІРѕ РїСЂРѕРїРёСЃР°С‚СЊ РєРѕРјР°РЅРґСѓ Р°РєС‚РёРІР°С†РёРё СЃРєСЂРёРїС‚Р°")
 				imgui.PopTextWrapPos()
 				imgui.EndTooltip()
 			end		
@@ -822,12 +817,12 @@ function(one)
 		if imgui.IsItemHovered() then
 			imgui.BeginTooltip()
 			imgui.PushTextWrapPos(600)
-			imgui.TextUnformatted(u8"ЛКМ - Проверить обновления\nПКМ - Открыть группу в вк")
+			imgui.TextUnformatted(u8"Р›РљРњ - РџСЂРѕРІРµСЂРёС‚СЊ РѕР±РЅРѕРІР»РµРЅРёСЏ\nРџРљРњ - РћС‚РєСЂС‹С‚СЊ РіСЂСѓРїРїСѓ РІ РІРє")
 			imgui.PopTextWrapPos()
 			imgui.EndTooltip()
 		end		
 		if imgui.IsItemClicked(1) then
-			os.execute('explorer "https://vk.com/dmitriyewichmods"') -- открытие браузера с этой ссылкой
+			os.execute('explorer "https://vk.com/dmitriyewichmods"') -- РѕС‚РєСЂС‹С‚РёРµ Р±СЂР°СѓР·РµСЂР° СЃ СЌС‚РѕР№ СЃСЃС‹Р»РєРѕР№
 		end
 			-- imgui.PopStyleColor()
 		if not main_window[0] then 
@@ -864,10 +859,10 @@ function(two)
 	imgui.SetScrollY(imgui.GetScrollMaxY())
 	-- imgui.TextWrapped(u8''..changelog)
 	imgui_text_color(u8''..changelog, true)
-    if imgui.Link(fa.ICON_FA_LINK .. u8"Незанятые иды", u8"Файл откроется в браузере, ничего скачиваться не будет") then
+    if imgui.Link(fa.ICON_FA_LINK .. u8"РќРµР·Р°РЅСЏС‚С‹Рµ РёРґС‹", u8"Р¤Р°Р№Р» РѕС‚РєСЂРѕРµС‚СЃСЏ РІ Р±СЂР°СѓР·РµСЂРµ, РЅРёС‡РµРіРѕ СЃРєР°С‡РёРІР°С‚СЊСЃСЏ РЅРµ Р±СѓРґРµС‚") then
         os.execute(('explorer.exe "%s"'):format(invalidID))
     end
-	if changelog_window_state[0] == false then config.settings.changelog = false; savejson(convertTableToJsonString(config), "moonloader/config/fskin.json"); end
+	if changelog_window_state[0] == false then config.settings.changelog = false; savejson(convertTableToJsonString(config), "moonloader/config/Personal Skin Changer.json"); end
 	imgui.End()
 end)	
 function imgui.Link(label, description)
@@ -959,7 +954,7 @@ function main()
 		sampUnregisterChatCommand('fskin')
 		sampRegisterChatCommand(config.settings.cmd, function() main_window[0] = not main_window[0]; Alpha() end)
 	end	
-	sampSetClientCommandDescription(config.settings.cmd, string.format("Активация/деактивация окна %s, Файл: %s", thisScript().name, thisScript().filename))
+	sampSetClientCommandDescription(config.settings.cmd, string.format("РђРєС‚РёРІР°С†РёСЏ/РґРµР°РєС‚РёРІР°С†РёСЏ РѕРєРЅР° %s, Р¤Р°Р№Р»: %s", thisScript().name, thisScript().filename))
 	
 	if config.settings.changelog == true then 
 		changelog_window_state[0] = true
@@ -1028,7 +1023,7 @@ function onScriptTerminate(LuaScript, quitGame)
 end
 
 function autoupdate(json_url, prefix, url)
-	updatestatustest = u8'Проверяю обновление.'
+	updatestatustest = u8'РџСЂРѕРІРµСЂСЏСЋ РѕР±РЅРѕРІР»РµРЅРёРµ.'
 	local dlstatus = require('moonloader').download_status
 	local json = getWorkingDirectory() .. '\\'..thisScript().name..'-version.json'
 	if doesFileExist(json) then os.remove(json) end
@@ -1046,21 +1041,21 @@ function autoupdate(json_url, prefix, url)
 			  if updateversion ~= thisScript().version then
 				lua_thread.create(function(prefix)
 				  local dlstatus = require('moonloader').download_status
-				  updatestatustest = u8'Обнаружено обновление. \nПытаюсь обновиться c '..thisScript().version..u8' на '..updateversion	
+				  updatestatustest = u8'РћР±РЅР°СЂСѓР¶РµРЅРѕ РѕР±РЅРѕРІР»РµРЅРёРµ. \nРџС‹С‚Р°СЋСЃСЊ РѕР±РЅРѕРІРёС‚СЊСЃСЏ c '..thisScript().version..u8' РЅР° '..updateversion	
 				  wait(574)
 				  int_scr_download = downloadUrlToFile(updatelink, thisScript().path,
 					function(id3, status1, p13, p23)
 					  if status1 == dlstatus.STATUS_ENDDOWNLOADDATA and int_scr_download == id3 then
-						updatestatustest = u8'Загрузка обновления завершена.'	
-						updatestatustest = u8'Обновление завершено!.'
+						updatestatustest = u8'Р—Р°РіСЂСѓР·РєР° РѕР±РЅРѕРІР»РµРЅРёСЏ Р·Р°РІРµСЂС€РµРЅР°.'	
+						updatestatustest = u8'РћР±РЅРѕРІР»РµРЅРёРµ Р·Р°РІРµСЂС€РµРЅРѕ!.'
 						config.settings.changelog = true
-						savejson(convertTableToJsonString(config), "moonloader/config/fskin.json")
+						savejson(convertTableToJsonString(config), "moonloader/config/Personal Skin Changer.json")
 						goupdatestatus = true
 						lua_thread.create(function() wait(500) thisScript():reload() end)
 					  end
 					  if status1 == dlstatus.STATUSEX_ENDDOWNLOAD and int_scr_download == id3 then
 						if goupdatestatus == nil then
-						  updatestatustest = u8'Обновление прошло неудачно. \nЗапускаю устаревшую версию.'
+						  updatestatustest = u8'РћР±РЅРѕРІР»РµРЅРёРµ РїСЂРѕС€Р»Рѕ РЅРµСѓРґР°С‡РЅРѕ. \nР—Р°РїСѓСЃРєР°СЋ СѓСЃС‚Р°СЂРµРІС€СѓСЋ РІРµСЂСЃРёСЋ.'
 						  update = false
 						end
 					  end
@@ -1070,11 +1065,11 @@ function autoupdate(json_url, prefix, url)
 				)
 			  else
 				update = false
-				updatestatustest = u8'Обновление не требуется.\nТекущая версия '..thisScript().version
+				updatestatustest = u8'РћР±РЅРѕРІР»РµРЅРёРµ РЅРµ С‚СЂРµР±СѓРµС‚СЃСЏ.\nРўРµРєСѓС‰Р°СЏ РІРµСЂСЃРёСЏ '..thisScript().version
 			  end
 			end
 		  else
-			updatestatustest = u8'Не могу проверить обновление. \nВозможно, что-то блокирует соединение с сервером. \nЕсли у вас есть !0AntiStealerByDarkP1xel32.ASI то удалите его и попробуйте снова.'
+			updatestatustest = u8'РќРµ РјРѕРіСѓ РїСЂРѕРІРµСЂРёС‚СЊ РѕР±РЅРѕРІР»РµРЅРёРµ. \nР’РѕР·РјРѕР¶РЅРѕ, С‡С‚Рѕ-С‚Рѕ Р±Р»РѕРєРёСЂСѓРµС‚ СЃРѕРµРґРёРЅРµРЅРёРµ СЃ СЃРµСЂРІРµСЂРѕРј. \nР•СЃР»Рё Сѓ РІР°СЃ РµСЃС‚СЊ !0AntiStealerByDarkP1xel32.ASI С‚Рѕ СѓРґР°Р»РёС‚Рµ РµРіРѕ Рё РїРѕРїСЂРѕР±СѓР№С‚Рµ СЃРЅРѕРІР°.'
 			update = false
 		  end
 		end
@@ -1088,14 +1083,14 @@ if lziplib then
 		file_path = getWorkingDirectory() .. "\\" .. script_name ..".zip"
 
 		if doesFileExist(file_path) then
-			print("Распаковка архива: " .. script_name)
+			print("Р Р°СЃРїР°РєРѕРІРєР° Р°СЂС…РёРІР°: " .. script_name)
 			local extract_des = string.format("%s\\%s",getWorkingDirectory(),script_name)
 			ziplib.zip_extract(file_path,extract_des,nil,nil)
 			MoveFiles(extract_des,getWorkingDirectory().."\\lib")
 			os.remove(file_path)
-			print("Распаковка прошла успешно, распакован архив: " .. script_name)
+			print("Р Р°СЃРїР°РєРѕРІРєР° РїСЂРѕС€Р»Р° СѓСЃРїРµС€РЅРѕ, СЂР°СЃРїР°РєРѕРІР°РЅ Р°СЂС…РёРІ: " .. script_name)
 		else
-			print("Файлы не найдет, перезапустите скрипт.")
+			print("Р¤Р°Р№Р»С‹ РЅРµ РЅР°Р№РґРµС‚, РїРµСЂРµР·Р°РїСѓСЃС‚РёС‚Рµ СЃРєСЂРёРїС‚.")
 		end
 	end
 end
@@ -1120,7 +1115,7 @@ if llfs then
 				end
 				if doesFileExist(dest_file) then
 					os.remove(main_file)
-					print("Невозможно удалить файл " .. dest_file)
+					print("РќРµРІРѕР·РјРѕР¶РЅРѕ СѓРґР°Р»РёС‚СЊ С„Р°Р№Р» " .. dest_file)
 				else
 					os.rename(main_file,dest_file)
 				end
@@ -1132,9 +1127,9 @@ if llfs then
 end
 
 function checklibs()
-	if not lsampev or not limgui or not lfaicons or not lfa or not llfs or not lziplib then
+	if not lsampev or not limgui or not lfaicons or not lfa or not llfs or not lziplib then	  
 		lua_thread.create(function()
-			print('Подгрузка необходимых библиотек..')
+			print('РџРѕРґРіСЂСѓР·РєР° РЅРµРѕР±С…РѕРґРёРјС‹С… Р±РёР±Р»РёРѕС‚РµРє..')
 			if not lziplib then
 				downloadFile('ziplib', getWorkingDirectory()..'\\lib\\ziplib.dll', 'https://www.dropbox.com/s/uw0huxlf5tkv8ls/ziplib.dll?dl=1')
 				while not doesFileExist(getWorkingDirectory()..'\\lib\\ziplib.dll') do wait(0) end
@@ -1148,47 +1143,57 @@ function checklibs()
 				reloadScripts()
 			else
 				wait(0)
-			end			
-			--samp.lua
-			createDirectory(getWorkingDirectory()..'\\lib\\samp')
-			createDirectory(getWorkingDirectory()..'\\lib\\samp\\events')
-			createDirectory(getWorkingDirectory()..'\\lib\\mimgui')
-			createDirectory(getWorkingDirectory()..'\\resource\\fonts')
-			downloadFile('events', getWorkingDirectory()..'\\lib\\samp\\events.lua', 'https://raw.githubusercontent.com/THE-FYP/SAMP.Lua/master/samp/events.lua')
-		 	while not doesFileExist(getWorkingDirectory()..'\\lib\\samp\\events.lua') do wait(0) end
-			downloadFile('raknet', getWorkingDirectory()..'\\lib\\samp\\raknet.lua', 'https://raw.githubusercontent.com/THE-FYP/SAMP.Lua/master/samp/raknet.lua')
-		 	while not doesFileExist(getWorkingDirectory()..'\\lib\\samp\\raknet.lua') do wait(0) end
-			downloadFile('synchronization', getWorkingDirectory()..'\\lib\\samp\\synchronization.lua', 'https://raw.githubusercontent.com/THE-FYP/SAMP.Lua/master/samp/synchronization.lua')
-		 	while not doesFileExist(getWorkingDirectory()..'\\lib\\samp\\synchronization.lua') do wait(0) end
-			downloadFile('bitstream_io', getWorkingDirectory()..'\\lib\\samp\\events\\bitstream_io.lua', 'https://raw.githubusercontent.com/THE-FYP/SAMP.Lua/master/samp/events/bitstream_io.lua')
-		 	while not doesFileExist(getWorkingDirectory()..'\\lib\\samp\\events\\bitstream_io.lua') do wait(0) end
-			downloadFile('core', getWorkingDirectory()..'\\lib\\samp\\events\\core.lua', 'https://raw.githubusercontent.com/THE-FYP/SAMP.Lua/master/samp/events/core.lua')
-		 	while not doesFileExist(getWorkingDirectory()..'\\lib\\samp\\events\\core.lua') do wait(0) end
-			downloadFile('extra_types', getWorkingDirectory()..'\\lib\\samp\\events\\extra_types.lua', 'https://raw.githubusercontent.com/THE-FYP/SAMP.Lua/master/samp/events/extra_types.lua')
-		 	while not doesFileExist(getWorkingDirectory()..'\\lib\\samp\\events\\extra_types.lua') do wait(0) end
-			downloadFile('handlers', getWorkingDirectory()..'\\lib\\samp\\events\\handlers.lua', 'https://raw.githubusercontent.com/THE-FYP/SAMP.Lua/master/samp/events/handlers.lua')
-		 	while not doesFileExist(getWorkingDirectory()..'\\lib\\samp\\events\\handlers.lua') do wait(0) end
-			downloadFile('utils', getWorkingDirectory()..'\\lib\\samp\\events\\utils.lua', 'https://raw.githubusercontent.com/THE-FYP/SAMP.Lua/master/samp/events/utils.lua')
-		 	while not doesFileExist(getWorkingDirectory()..'\\lib\\samp\\events\\utils.lua') do wait(0) end
-			--fa-icons
-			downloadFile('fa-icons', getWorkingDirectory()..'\\lib\\fa-icons.lua', 'https://gitlab.com/THE-FYP/lua-fa-icons-4/-/raw/master/fa-icons.lua?inline=false')
-			while not doesFileExist(getWorkingDirectory()..'\\lib\\fa-icons.lua') do wait(0) end			
-			downloadFile('fontawesome-webfont', getWorkingDirectory()..'\\resource\\fonts\\fontawesome-webfont.ttf', 'https://github.com/onface/font-awesome/raw/master/fonts/fontawesome-webfont.ttf')
-		 	while not doesFileExist(getWorkingDirectory()..'\\resource\\fonts\\fontawesome-webfont.ttf') do wait(0) end
-			--fAwesome5
-			downloadFile('fAwesome5', getWorkingDirectory()..'\\lib\\fAwesome5.lua', 'https://www.dropbox.com/s/arnejom9vn3igfa/fAwesome5.lua?dl=1')
-			while not doesFileExist(getWorkingDirectory()..'\\lib\\fa-icons.lua') do wait(0) end			
-			downloadFile('fa-solid-900', getWorkingDirectory()..'\\resource\\fonts\\fa-solid-900.ttf', 'https://github.com/FortAwesome/Font-Awesome/raw/master/webfonts/fa-solid-900.ttf')
-		 	while not doesFileExist(getWorkingDirectory()..'\\resource\\fonts\\fa-solid-900.ttf') do wait(0) end		
-			--mimgui
+			end
+			if not lsampev then
+				--samp.lua
+				createDirectory(getWorkingDirectory()..'\\lib\\samp')
+				createDirectory(getWorkingDirectory()..'\\lib\\samp\\events')
+				createDirectory(getWorkingDirectory()..'\\lib\\mimgui')
+				createDirectory(getWorkingDirectory()..'\\resource\\fonts')
+				downloadFile('events', getWorkingDirectory()..'\\lib\\samp\\events.lua', 'https://raw.githubusercontent.com/THE-FYP/SAMP.Lua/master/samp/events.lua')
+				while not doesFileExist(getWorkingDirectory()..'\\lib\\samp\\events.lua') do wait(0) end
+				downloadFile('raknet', getWorkingDirectory()..'\\lib\\samp\\raknet.lua', 'https://raw.githubusercontent.com/THE-FYP/SAMP.Lua/master/samp/raknet.lua')
+				while not doesFileExist(getWorkingDirectory()..'\\lib\\samp\\raknet.lua') do wait(0) end
+				downloadFile('synchronization', getWorkingDirectory()..'\\lib\\samp\\synchronization.lua', 'https://raw.githubusercontent.com/THE-FYP/SAMP.Lua/master/samp/synchronization.lua')
+				while not doesFileExist(getWorkingDirectory()..'\\lib\\samp\\synchronization.lua') do wait(0) end
+				downloadFile('bitstream_io', getWorkingDirectory()..'\\lib\\samp\\events\\bitstream_io.lua', 'https://raw.githubusercontent.com/THE-FYP/SAMP.Lua/master/samp/events/bitstream_io.lua')
+				while not doesFileExist(getWorkingDirectory()..'\\lib\\samp\\events\\bitstream_io.lua') do wait(0) end
+				downloadFile('core', getWorkingDirectory()..'\\lib\\samp\\events\\core.lua', 'https://raw.githubusercontent.com/THE-FYP/SAMP.Lua/master/samp/events/core.lua')
+				while not doesFileExist(getWorkingDirectory()..'\\lib\\samp\\events\\core.lua') do wait(0) end
+				downloadFile('extra_types', getWorkingDirectory()..'\\lib\\samp\\events\\extra_types.lua', 'https://raw.githubusercontent.com/THE-FYP/SAMP.Lua/master/samp/events/extra_types.lua')
+				while not doesFileExist(getWorkingDirectory()..'\\lib\\samp\\events\\extra_types.lua') do wait(0) end
+				downloadFile('handlers', getWorkingDirectory()..'\\lib\\samp\\events\\handlers.lua', 'https://raw.githubusercontent.com/THE-FYP/SAMP.Lua/master/samp/events/handlers.lua')
+				while not doesFileExist(getWorkingDirectory()..'\\lib\\samp\\events\\handlers.lua') do wait(0) end
+				downloadFile('utils', getWorkingDirectory()..'\\lib\\samp\\events\\utils.lua', 'https://raw.githubusercontent.com/THE-FYP/SAMP.Lua/master/samp/events/utils.lua')
+				while not doesFileExist(getWorkingDirectory()..'\\lib\\samp\\events\\utils.lua') do wait(0) end
+				reloadScripts()
+			end
+			if not lfaicons then
+				--fa-icons
+				downloadFile('fa-icons', getWorkingDirectory()..'\\lib\\fa-icons.lua', 'https://gitlab.com/THE-FYP/lua-fa-icons-4/-/raw/master/fa-icons.lua?inline=false')
+				while not doesFileExist(getWorkingDirectory()..'\\lib\\fa-icons.lua') do wait(0) end			
+				downloadFile('fontawesome-webfont', getWorkingDirectory()..'\\resource\\fonts\\fontawesome-webfont.ttf', 'https://github.com/onface/font-awesome/raw/master/fonts/fontawesome-webfont.ttf')
+				while not doesFileExist(getWorkingDirectory()..'\\resource\\fonts\\fontawesome-webfont.ttf') do wait(0) end
+				reloadScripts()
+			end
+			if not lfa then
+				--fAwesome5
+				downloadFile('fAwesome5', getWorkingDirectory()..'\\lib\\fAwesome5.lua', 'https://www.dropbox.com/s/arnejom9vn3igfa/fAwesome5.lua?dl=1')
+				while not doesFileExist(getWorkingDirectory()..'\\lib\\fa-icons.lua') do wait(0) end			
+				downloadFile('fa-solid-900', getWorkingDirectory()..'\\resource\\fonts\\fa-solid-900.ttf', 'https://github.com/FortAwesome/Font-Awesome/raw/master/webfonts/fa-solid-900.ttf')
+				while not doesFileExist(getWorkingDirectory()..'\\resource\\fonts\\fa-solid-900.ttf') do wait(0) end
+				reloadScripts()
+			end
+				--mimgui
 			if not limgui then
-			downloadFile('mimgui-v1.7.0.zip', getWorkingDirectory()..'\\mimgui-v1.7.0.zip', 'https://github.com/THE-FYP/mimgui/releases/download/v1.7.0/mimgui-v1.7.0.zip')
-			while not doesFileExist(getWorkingDirectory()..'\\mimgui-v1.7.0.zip') do wait(0) end
-			zipextract("mimgui-v1.7.0")
+				downloadFile('mimgui-v1.7.0.zip', getWorkingDirectory()..'\\mimgui-v1.7.0.zip', 'https://github.com/THE-FYP/mimgui/releases/download/v1.7.0/mimgui-v1.7.0.zip')
+				while not doesFileExist(getWorkingDirectory()..'\\mimgui-v1.7.0.zip') do wait(0) end
+				zipextract("mimgui-v1.7.0")
+				reloadScripts()
 			else
 				wait(0)
 			end
-			print('Подгрузка библиотек успешно завершена. Перезагрузка скриптов...')
+			print('РџРѕРґРіСЂСѓР·РєР° Р±РёР±Р»РёРѕС‚РµРє СѓСЃРїРµС€РЅРѕ Р·Р°РІРµСЂС€РµРЅР°. РџРµСЂРµР·Р°РіСЂСѓР·РєР° СЃРєСЂРёРїС‚РѕРІ...')
 			wait(1000)
 			reloadScripts()
 		end)
@@ -1199,13 +1204,13 @@ end
 
 function downloadFile(name, path, link)
 	if not doesFileExist(path) then
-		print('Скачивание файла {006AC2}«'..name..'»')
+		print('РЎРєР°С‡РёРІР°РЅРёРµ С„Р°Р№Р»Р° {006AC2}В«'..name..'В»')
 		downloadUrlToFile(link, path, function(id, status, p1, p2)
 			if status == dlstatus.STATUSEX_ENDDOWNLOAD then
 				if doesFileExist(path) then
-					print('Файл {006AC2}«'..name..'»{FFFFFF} загружен!')
+					print('Р¤Р°Р№Р» {006AC2}В«'..name..'В»{FFFFFF} Р·Р°РіСЂСѓР¶РµРЅ!')
 				else
-					print('Не удалось загрузить файл {006AC2}«'..name..'»')
+					print('РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ С„Р°Р№Р» {006AC2}В«'..name..'В»')
 				end
 			end
 		end)
