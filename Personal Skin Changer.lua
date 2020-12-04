@@ -1131,14 +1131,14 @@ function checklibs()
 		lua_thread.create(function()
 			print('Подгрузка необходимых библиотек..')
 			if not lziplib then
-				downloadFile('ziplib', getWorkingDirectory()..'\\lib\\ziplib.dll', 'https://www.dropbox.com/s/uw0huxlf5tkv8ls/ziplib.dll?dl=1')
+				downloadFile('ziplib', getWorkingDirectory()..'\\lib\\ziplib.dll', 'https://github.com/dmitriyewich/Personal-Skin-Changer/raw/main/lib/ziplib.dll')
 				while not doesFileExist(getWorkingDirectory()..'\\lib\\ziplib.dll') do wait(0) end
 				reloadScripts()
 			else
 				wait(0)
 			end
 			if not llfs then
-				downloadFile('lfs.dll', getWorkingDirectory()..'\\lib\\lfs.dll', 'https://www.dropbox.com/s/d6urv7nxcrtkcz3/lfs.dll?dl=1')
+				downloadFile('lfs.dll', getWorkingDirectory()..'\\lib\\lfs.dll', 'https://github.com/dmitriyewich/Personal-Skin-Changer/raw/main/lib/lfs.dll')
 				while not doesFileExist(getWorkingDirectory()..'\\lib\\lfs.dll') do wait(0) end
 				reloadScripts()
 			else
