@@ -1,5 +1,5 @@
 script_name('PersonalSkinChanger')
-script_version('1.0.4')
+script_version('1.0.4.1')
 script_author('dmitriyewich, https://vk.com/dmitriyewichmods')
 script_properties('work-in-pause')
 
@@ -54,6 +54,8 @@ changelog = u8[[
 {ccccd3}Микрофиксы.
 	{FFFFFF}v1.0.4 
 {ccccd3}Микрофиксы. Изменение ссылки на обновление. Проверка идет с github.
+	{FFFFFF}v1.0.4.1
+{ccccd3}Микрофиксы.
 ]]
 
 local function isarray(t, emptyIsObject)
@@ -1146,27 +1148,13 @@ function checklibs()
 			end
 			if not lsampev then
 				--samp.lua
-				createDirectory(getWorkingDirectory()..'\\lib\\samp')
-				createDirectory(getWorkingDirectory()..'\\lib\\samp\\events')
-				createDirectory(getWorkingDirectory()..'\\lib\\mimgui')
-				createDirectory(getWorkingDirectory()..'\\resource\\fonts')
-				downloadFile('events', getWorkingDirectory()..'\\lib\\samp\\events.lua', 'https://raw.githubusercontent.com/THE-FYP/SAMP.Lua/master/samp/events.lua')
-				while not doesFileExist(getWorkingDirectory()..'\\lib\\samp\\events.lua') do wait(0) end
-				downloadFile('raknet', getWorkingDirectory()..'\\lib\\samp\\raknet.lua', 'https://raw.githubusercontent.com/THE-FYP/SAMP.Lua/master/samp/raknet.lua')
-				while not doesFileExist(getWorkingDirectory()..'\\lib\\samp\\raknet.lua') do wait(0) end
-				downloadFile('synchronization', getWorkingDirectory()..'\\lib\\samp\\synchronization.lua', 'https://raw.githubusercontent.com/THE-FYP/SAMP.Lua/master/samp/synchronization.lua')
-				while not doesFileExist(getWorkingDirectory()..'\\lib\\samp\\synchronization.lua') do wait(0) end
-				downloadFile('bitstream_io', getWorkingDirectory()..'\\lib\\samp\\events\\bitstream_io.lua', 'https://raw.githubusercontent.com/THE-FYP/SAMP.Lua/master/samp/events/bitstream_io.lua')
-				while not doesFileExist(getWorkingDirectory()..'\\lib\\samp\\events\\bitstream_io.lua') do wait(0) end
-				downloadFile('core', getWorkingDirectory()..'\\lib\\samp\\events\\core.lua', 'https://raw.githubusercontent.com/THE-FYP/SAMP.Lua/master/samp/events/core.lua')
-				while not doesFileExist(getWorkingDirectory()..'\\lib\\samp\\events\\core.lua') do wait(0) end
-				downloadFile('extra_types', getWorkingDirectory()..'\\lib\\samp\\events\\extra_types.lua', 'https://raw.githubusercontent.com/THE-FYP/SAMP.Lua/master/samp/events/extra_types.lua')
-				while not doesFileExist(getWorkingDirectory()..'\\lib\\samp\\events\\extra_types.lua') do wait(0) end
-				downloadFile('handlers', getWorkingDirectory()..'\\lib\\samp\\events\\handlers.lua', 'https://raw.githubusercontent.com/THE-FYP/SAMP.Lua/master/samp/events/handlers.lua')
-				while not doesFileExist(getWorkingDirectory()..'\\lib\\samp\\events\\handlers.lua') do wait(0) end
-				downloadFile('utils', getWorkingDirectory()..'\\lib\\samp\\events\\utils.lua', 'https://raw.githubusercontent.com/THE-FYP/SAMP.Lua/master/samp/events/utils.lua')
-				while not doesFileExist(getWorkingDirectory()..'\\lib\\samp\\events\\utils.lua') do wait(0) end
+				downloadFile('samp-lua-v2.2.0', getWorkingDirectory()..'\\samp-lua-v2.2.0.zip', 'https://github.com/THE-FYP/SAMP.Lua/releases/download/v2.2.0/samp-lua-v2.2.0.zip')
+				while not doesFileExist(getWorkingDirectory()..'\\samp-lua-v2.2.0.zip') do wait(0) end
+				zipextract("samp-lua-v2.2.0")
+				wait(1000)
 				reloadScripts()
+			else
+				wait(0)
 			end
 			if not lfaicons then
 				--fa-icons
@@ -1189,6 +1177,7 @@ function checklibs()
 				downloadFile('mimgui-v1.7.0.zip', getWorkingDirectory()..'\\mimgui-v1.7.0.zip', 'https://github.com/THE-FYP/mimgui/releases/download/v1.7.0/mimgui-v1.7.0.zip')
 				while not doesFileExist(getWorkingDirectory()..'\\mimgui-v1.7.0.zip') do wait(0) end
 				zipextract("mimgui-v1.7.0")
+				wait(1000)
 				reloadScripts()
 			else
 				wait(0)
