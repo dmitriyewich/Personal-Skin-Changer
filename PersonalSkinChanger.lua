@@ -19,7 +19,7 @@ ffi.cdef[[
 ]]
 
 local new = imgui.new
-encoding.default = 'CP1251'
+encoding.default = 'UTF8'
 u8 = encoding.UTF8
 
 local updlink = 'https://raw.githubusercontent.com/dmitriyewich/Personal-Skin-Changer/main/update.json' -- автообновление, удалите всё что в ''
