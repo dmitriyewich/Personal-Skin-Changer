@@ -21,7 +21,7 @@ ffi.cdef[[
 local new = imgui.new
 
 local updlink = 'https://raw.githubusercontent.com/dmitriyewich/Personal-Skin-Changer/main/update.json' -- автообновление, удалите всё что в ''
-local invalidID = 'https://www.dropbox.com/s/b9l408093niu2sa/invalidID.txt?dl=0' -- незанятые иды
+local invalidID = 'https://raw.githubusercontent.com/dmitriyewich/Personal-Skin-Changer/main/invalidID.txt' -- незанятые иды
 
 changelog = [[
 	{FFFFFF}v0.1
