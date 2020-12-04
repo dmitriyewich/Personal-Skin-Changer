@@ -1,4 +1,4 @@
-script_name('Personal Skin Changer')
+script_name('PersonalSkinChanger')
 script_version('1.0.4')
 script_author('dmitriyewich, https://vk.com/dmitriyewichmods')
 script_properties('work-in-pause')
@@ -43,7 +43,7 @@ changelog = u8[[
 	{FFFFFF}v0.8
 {ccccd3}Перевел скрипт на {FFFFFF}mimgui{ccccd3}. Мелкие фиксы, улучшения.
 	{FFFFFF}v0.9
-{ccccd3}Ребрендинг. Теперь скрипт называется {FFFFFF}Personal Skin Changer{ccccd3}(всместо Очередной фейкскин). При отсутвии необходимых библиотек скрипт сам их скачает. Мелкие фиксы, улучшения.	
+{ccccd3}Ребрендинг. Теперь скрипт называется {FFFFFF}PersonalSkinChanger{ccccd3}(всместо Очередной фейкскин). При отсутвии необходимых библиотек скрипт сам их скачает. Мелкие фиксы, улучшения.	
 	{FFFFFF}v1.0
 {ccccd3}При отвязки скина возвращается скин который был до привязки. Добавил в настройки смену команды активации скрипта. Мелкие фиксы.
 	{FFFFFF}v1.0.1
@@ -262,8 +262,8 @@ local updatestatustest = u8''
 local updatestatusonof = u8''
 local saveskintext = u8''
 local changecmdtext = u8''
-if doesFileExist("moonloader/config/Personal Skin Changer.json") then
-    local f = io.open("moonloader/config/Personal Skin Changer.json")
+if doesFileExist("moonloader/config/PersonalSkinChanger.json") then
+    local f = io.open("moonloader/config/PersonalSkinChanger.json")
     config = decodeJson(f:read("*a"))
     f:close()
 else
@@ -281,7 +281,7 @@ else
             ["Name_Nick"] = 313;
         }
 	}
-    savejson(convertTableToJsonString(config), "moonloader/config/Personal Skin Changer.json")
+    savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")
 end
 
 function sampGetPlayerIdByNickname(nick)
@@ -634,7 +634,7 @@ function(one)
 					end
 				end
 			end
-			savejson(convertTableToJsonString(config), "moonloader/config/Personal Skin Changer.json") -- сохранение в конфиг json привязанного ника к иду			
+			savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json") -- сохранение в конфиг json привязанного ника к иду			
 			lua_thread.create(function() saveskintext = u8""..u8:decode(ffi.string(nick))..u8' - '..u8:decode(ffi.string(idskin))..u8' успешно сохранено'; wait(2574); saveskintext = u8''; end)
 			for k, v in pairs(config.skins) do
 				local nametoid = sampGetPlayerIdByNickname(k)
@@ -659,7 +659,7 @@ function(one)
 				local nametoid = sampGetPlayerIdByNickname(k)
 				changeSkin(nametoid, v)
 			end				
-				savejson(convertTableToJsonString(config), "moonloader/config/Personal Skin Changer.json")				
+				savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")				
 			end 			
 			if imgui.IsItemHovered() then
 				imgui.BeginTooltip()
@@ -742,12 +742,12 @@ function(one)
 			config.settings.autoupdate = not config.settings.autoupdate
 			if config.settings.autoupdate then 
 				config.settings.autoupdate = true
-				savejson(convertTableToJsonString(config), "moonloader/config/Personal Skin Changer.json")
+				savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")
 				autoupdate(updlink,'##nil',updlink)		
 			else 
 				config.settings.autoupdate = false
 				updatestatustest = u8''					
-				savejson(convertTableToJsonString(config), "moonloader/config/Personal Skin Changer.json")	
+				savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")	
 			end 
 		end
 		
@@ -756,7 +756,7 @@ function(one)
 		imgui.PushItemWidth(100)
 		if imgui.InputText(u8'', cmdbuffer, buffer_size - 1, imgui.InputTextFlags.AutoSelectAll) then
 			config.settings.cmd = ffi.string(cmdbuffer)
-            -- savejson(convertTableToJsonString(config), "moonloader/config/Personal Skin Changer.json")	
+            -- savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")	
         end
 			if imgui.IsItemHovered() then
 				imgui.BeginTooltip()
@@ -769,13 +769,13 @@ function(one)
         imgui.SameLine()
         if imgui.Button(u8'Сохранить команду', imgui.ImVec2(130, 0)) then
 			config.settings.cmd = ffi.string(cmdbuffer)
-			savejson(convertTableToJsonString(config), "moonloader/config/Personal Skin Changer.json")
+			savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")
 			sampUnregisterChatCommand('fskin')
 			sampRegisterChatCommand(config.settings.cmd, function() main_window[0] = not main_window[0] end)
         if ffi.string(cmdbuffer) == nil or ffi.string(cmdbuffer) == '' or ffi.string(cmdbuffer) == ' ' or ffi.string(cmdbuffer):find('/.+') then
 				changecmdtext = u8'Поле ввода пустое или содержит символ "/"\nВведите команду без "/" '
 				config.settings.cmd = 'fskin'
-				savejson(convertTableToJsonString(config), "moonloader/config/Personal Skin Changer.json")
+				savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")
 			else
 				changecmdtext = u8''
 			end
@@ -798,7 +798,7 @@ function(one)
 			end				
 		imgui.SameLine()
 		if imgui.Button(u8'Перезапустить\nскрипт', imgui.ImVec2(100, 0)) then
-			savejson(convertTableToJsonString(config), "moonloader/config/Personal Skin Changer.json")
+			savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")
 			thisScript():reload()
 		end
 			if imgui.IsItemHovered() then
@@ -862,7 +862,7 @@ function(two)
     if imgui.Link(fa.ICON_FA_LINK .. u8"Незанятые иды", u8"Файл откроется в браузере, ничего скачиваться не будет") then
         os.execute(('explorer.exe "%s"'):format(invalidID))
     end
-	if changelog_window_state[0] == false then config.settings.changelog = false; savejson(convertTableToJsonString(config), "moonloader/config/Personal Skin Changer.json"); end
+	if changelog_window_state[0] == false then config.settings.changelog = false; savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json"); end
 	imgui.End()
 end)	
 function imgui.Link(label, description)
@@ -1049,7 +1049,7 @@ function autoupdate(json_url, prefix, url)
 						updatestatustest = u8'Загрузка обновления завершена.'	
 						updatestatustest = u8'Обновление завершено!.'
 						config.settings.changelog = true
-						savejson(convertTableToJsonString(config), "moonloader/config/Personal Skin Changer.json")
+						savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")
 						goupdatestatus = true
 						lua_thread.create(function() wait(500) thisScript():reload() end)
 					  end
