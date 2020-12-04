@@ -19,13 +19,11 @@ ffi.cdef[[
 ]]
 
 local new = imgui.new
---encoding.default = 'UTF8'
-u8 = encoding.UTF8
 
 local updlink = 'https://raw.githubusercontent.com/dmitriyewich/Personal-Skin-Changer/main/update.json' -- автообновление, удалите всё что в ''
 local invalidID = 'https://www.dropbox.com/s/b9l408093niu2sa/invalidID.txt?dl=0' -- незанятые иды
 
-changelog = u8[[
+changelog = [[
 	{FFFFFF}v0.1
 {ccccd3}Релиз.
 	{FFFFFF}v0.2 
@@ -55,7 +53,7 @@ changelog = u8[[
 	{FFFFFF}v1.0.4 
 {ccccd3}Микрофиксы. Изменение ссылки на обновление. Проверка идет с github.
 	{FFFFFF}v1.0.4.1
-{ccccd3}Микрофиксы.
+{ccccd3}Микрофиксы. Исправление кодировки.
 ]]
 
 local function isarray(t, emptyIsObject)
@@ -260,10 +258,10 @@ function convertTableToJsonString(config)
     return (neatJSON(config, {sort = true, wrap = 40}))
 end 	
 local config = {}
-local updatestatustest = u8''
-local updatestatusonof = u8''
-local saveskintext = u8''
-local changecmdtext = u8''
+local updatestatustest = ''
+local updatestatusonof = ''
+local saveskintext = ''
+local changecmdtext = ''
 if doesFileExist("moonloader/config/PersonalSkinChanger.json") then
     local f = io.open("moonloader/config/PersonalSkinChanger.json")
     config = decodeJson(f:read("*a"))
@@ -570,29 +568,29 @@ function(one)
 	local sizeX, sizeY = getScreenResolution()
 	imgui.SetNextWindowPos(imgui.ImVec2(sizeX / 1.3, sizeY / 1.7), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))    
   	imgui.SetNextWindowSize(imgui.ImVec2(400, 460), imgui.Cond.FirstUseEver)
-	imgui.Begin(fa.ICON_FA_ID_BADGE .. u8' ##mimgui ', main_window, imgui.WindowFlags.NoCollapse + imgui.WindowFlags.NoResize + imgui.WindowFlags.NoMove)
+	imgui.Begin(fa.ICON_FA_ID_BADGE .. ' ##mimgui ', main_window, imgui.WindowFlags.NoCollapse + imgui.WindowFlags.NoResize + imgui.WindowFlags.NoMove)
 	imgui.Separator()
 	imgui.SetCursorPosX((imgui.GetWindowWidth() - 374) / 2)  
 	imgui.Image(logo, imgui.ImVec2(374, 28))
 	if imgui.IsItemHovered() then
 		imgui.BeginTooltip()
 		imgui.PushTextWrapPos(600)
-		imgui.TextUnformatted(fa.ICON_FA_COPYRIGHT .. u8"dmitriyewich aka Валерий Дмитриевич.\nРаспространение допускается только с указанием автора или ссылки на пост в вк")
+		imgui.TextUnformatted(fa.ICON_FA_COPYRIGHT .. "dmitriyewich aka Валерий Дмитриевич.\nРаспространение допускается только с указанием автора или ссылки на пост в вк")
 		imgui.PopTextWrapPos()
 		imgui.EndTooltip()
 	end	
 	imgui.Separator()
-	imgui.Text(u8' Введите ник')
+	imgui.Text(' Введите ник')
 	imgui.SameLine()
 	imgui.PushItemWidth(174)
 	local buffer_size = ffi.sizeof(nick)
-	imgui.InputTextWithHint(u8'##Введите ник3', u8'Nick_Name', nick, ffi.sizeof(nick) - 1, imgui.InputTextFlags.AutoSelectAll)
+	imgui.InputTextWithHint('##Введите ник3', 'Nick_Name', nick, ffi.sizeof(nick) - 1, imgui.InputTextFlags.AutoSelectAll)
 	imgui.PopItemWidth()
 	imgui.SameLine()
-	imgui.Text(u8'ID skin')
+	imgui.Text('ID skin')
 	imgui.SameLine()
 	imgui.PushItemWidth(47)
-	imgui.InputTextWithHint(u8'##ID skin', u8'74', idskin, ffi.sizeof(idskin) - 1, imgui.InputTextFlags.CharsDecimal + imgui.InputTextFlags.AutoSelectAll)
+	imgui.InputTextWithHint('##ID skin', '74', idskin, ffi.sizeof(idskin) - 1, imgui.InputTextFlags.CharsDecimal + imgui.InputTextFlags.AutoSelectAll)
 	imgui.PopItemWidth()
 	local allChars, SkinsRaius = getAllChars(), {}	-- функция получение идов и ников игроков в радиусе от игрока
 	local radius = 25 --Радиус действия, по умолчанию - 25 метров
@@ -605,9 +603,9 @@ function(one)
         end
     end
 	imgui.PushItemWidth(200)
-	imgui.Text(u8' Ближайший игрок')
+	imgui.Text(' Ближайший игрок')
 	imgui.SameLine()
-	if imgui.Combo(u8'##Ближайший игрок', combo, SkinsRaiusTable, #SkinsRaius) then -- выбор игрока в радиусе от игрока
+	if imgui.Combo('##Ближайший игрок', combo, SkinsRaiusTable, #SkinsRaius) then -- выбор игрока в радиусе от игрока
 		for i = 0, #SkinsRaius do
 			if combo[0] == i then
 					nickcombo = SkinsRaius[i + 1]
@@ -616,10 +614,10 @@ function(one)
 		end
 	end
 	imgui.SameLine()
-	imgui.TextQuestion(fa.ICON_FA_QUESTION .. u8" ", u8"Выбрав ник он автоматически вставится в окно ввода ника\nНики выводятся из игроков находящихся в радиусе 25 метров")	
+	imgui.TextQuestion(fa.ICON_FA_QUESTION .. " ", "Выбрав ник он автоматически вставится в окно ввода ника\nНики выводятся из игроков находящихся в радиусе 25 метров")	
 	imgui.PopItemWidth()		
 	imgui.SetCursorPosX((imgui.GetWindowWidth() - 370) / 2)
-	if imgui.Button(u8'Привязать скин к имени', imgui.ImVec2(370, 30)) then
+	if imgui.Button('Привязать скин к имени', imgui.ImVec2(370, 30)) then
 		config.skins[ffi.string(nick)] = ffi.string(idskin) -- запоминание привязанного ника к иду
 		if ffi.string(nick) ~= nil and ffi.string(idskin) ~= nil then
 			if not config.skinslast[ffi.string(nick)] then
@@ -637,19 +635,19 @@ function(one)
 				end
 			end
 			savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json") -- сохранение в конфиг json привязанного ника к иду			
-			lua_thread.create(function() saveskintext = u8""..u8:decode(ffi.string(nick))..u8' - '..u8:decode(ffi.string(idskin))..u8' успешно сохранено'; wait(2574); saveskintext = u8''; end)
+			lua_thread.create(function() saveskintext = ""..(ffi.string(nick))..' - '..(ffi.string(idskin))..' успешно сохранено'; wait(2574); saveskintext = ''; end)
 			for k, v in pairs(config.skins) do
 				local nametoid = sampGetPlayerIdByNickname(k)
 				changeSkin(nametoid, v)
 			end
 		else
-			lua_thread.create(function() saveskintext = u8'Введи свой никнейм или другого игрока и ID скина!'; wait(2574); saveskintext = u8''; end)	
+			lua_thread.create(function() saveskintext = 'Введи свой никнейм или другого игрока и ID скина!'; wait(2574); saveskintext = ''; end)	
 		end	
 	end
-	imgui.CenterText(u8""..saveskintext)
-	if imgui.CollapsingHeader(u8'Привязанные скины') then
+	imgui.CenterText(""..saveskintext)
+	if imgui.CollapsingHeader('Привязанные скины') then
 		for q, w in pairs(config.skins) do
-			imgui.CenterText(u8""..q.. u8' - Скин: '..w)
+			imgui.CenterText(""..q.. ' - Скин: '..w)
 			if imgui.IsItemClicked(1) then -- ПКМ - Отвязать скин от ника
 				config.skins[q] = nil
 			for k, v in pairs(config.skinslast) do
@@ -666,7 +664,7 @@ function(one)
 			if imgui.IsItemHovered() then
 				imgui.BeginTooltip()
 				imgui.PushTextWrapPos(600)
-				imgui.TextUnformatted(u8"ЛКМ - Скопировать ник\nПКМ - Отвязать скин от ника\nПри отвязке вернется последний скин перед привязкой.")
+				imgui.TextUnformatted("ЛКМ - Скопировать ник\nПКМ - Отвязать скин от ника\nПри отвязке вернется последний скин перед привязкой.")
 				imgui.PopTextWrapPos()
 				imgui.EndTooltip()
 			end
@@ -678,8 +676,8 @@ function(one)
 		end
 	end	
 	
-	if imgui.CollapsingHeader(u8'Предпросмотр скинов') then
-		if imgui.CollapsingHeader(u8'Стандартные скины') then
+	if imgui.CollapsingHeader('Предпросмотр скинов') then
+		if imgui.CollapsingHeader('Стандартные скины') then
 		local standartskin = 1 
 			for i = 1, 311, 1 do
 				if isModelInCdimage(i) then
@@ -696,7 +694,7 @@ function(one)
 			end		
 		end
 		
-		if imgui.CollapsingHeader(u8'Новые скины') then
+		if imgui.CollapsingHeader('Новые скины') then
 		listedNotDuplicate = {}
 		notduplicate = {}
 		for _, v in pairs(config.skins) do
@@ -709,7 +707,7 @@ function(one)
 			if imgui.IsItemHovered() then
 				imgui.BeginTooltip()
 				imgui.PushTextWrapPos(600)
-					imgui.TextUnformatted(u8"Добавляются при привязке скина к нику\nНезанятые иды можно посмотреть по кнопке в истории изменений\n" .. fa.ICON_FA_BOLT .. u8"Необходимо учесть, что без Open Limit Adjuster или fastman92 limit adjuster под скины можно использовать только с 1 по 799 ид(которые не заняты)")
+					imgui.TextUnformatted("Добавляются при привязке скина к нику\nНезанятые иды можно посмотреть по кнопке в истории изменений\n" .. fa.ICON_FA_BOLT .. "Необходимо учесть, что без Open Limit Adjuster или fastman92 limit adjuster под скины можно использовать только с 1 по 799 ид(которые не заняты)")
 				imgui.PopTextWrapPos()
 				imgui.EndTooltip()
 			end
@@ -731,14 +729,14 @@ function(one)
 					newskin = newskin + 1				
 				end
 			end
-			imgui.Text(u8'')
+			imgui.Text('')
 		end
 	end	
 	
-	if imgui.CollapsingHeader(u8'Настройки') then
-		if config.settings.autoupdate == true then updatestatusonof = u8'Включено' else updatestatusonof = u8'Выключено' end
+	if imgui.CollapsingHeader('Настройки') then
+		if config.settings.autoupdate == true then updatestatusonof = 'Включено' else updatestatusonof = 'Выключено' end
 		imgui.SetCursorPosX((imgui.GetWindowWidth() - 200) / 2)		
-		imgui.Text(string.format(u8"Автообновление: %s", updatestatusonof))
+		imgui.Text(string.format("Автообновление: %s", updatestatusonof))
 		imgui.SameLine()
 		if TBDonHomka.ToggleButton("Test2##2", autoupdateStatev) then 
 			config.settings.autoupdate = not config.settings.autoupdate
@@ -748,7 +746,7 @@ function(one)
 				autoupdate(updlink,'##nil',updlink)		
 			else 
 				config.settings.autoupdate = false
-				updatestatustest = u8''					
+				updatestatustest = ''					
 				savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")	
 			end 
 		end
@@ -756,70 +754,70 @@ function(one)
 		local buffer_size = ffi.sizeof(cmdbuffer)
 		imgui.SetCursorPosX((imgui.GetWindowWidth() - 230) / 2)
 		imgui.PushItemWidth(100)
-		if imgui.InputText(u8'', cmdbuffer, buffer_size - 1, imgui.InputTextFlags.AutoSelectAll) then
+		if imgui.InputText('', cmdbuffer, buffer_size - 1, imgui.InputTextFlags.AutoSelectAll) then
 			config.settings.cmd = ffi.string(cmdbuffer)
             -- savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")	
         end
 			if imgui.IsItemHovered() then
 				imgui.BeginTooltip()
 				imgui.PushTextWrapPos(600)
-					imgui.TextUnformatted(u8'Чтобы изменить команду активации\nвведите команду без "/"')
+					imgui.TextUnformatted('Чтобы изменить команду активации\nвведите команду без "/"')
 				imgui.PopTextWrapPos()
 				imgui.EndTooltip()
 			end		
 		imgui.PopItemWidth() 
         imgui.SameLine()
-        if imgui.Button(u8'Сохранить команду', imgui.ImVec2(130, 0)) then
+        if imgui.Button('Сохранить команду', imgui.ImVec2(130, 0)) then
 			config.settings.cmd = ffi.string(cmdbuffer)
 			savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")
 			sampUnregisterChatCommand('fskin')
 			sampRegisterChatCommand(config.settings.cmd, function() main_window[0] = not main_window[0] end)
         if ffi.string(cmdbuffer) == nil or ffi.string(cmdbuffer) == '' or ffi.string(cmdbuffer) == ' ' or ffi.string(cmdbuffer):find('/.+') then
-				changecmdtext = u8'Поле ввода пустое или содержит символ "/"\nВведите команду без "/" '
+				changecmdtext = 'Поле ввода пустое или содержит символ "/"\nВведите команду без "/" '
 				config.settings.cmd = 'fskin'
 				savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")
 			else
-				changecmdtext = u8''
+				changecmdtext = ''
 			end
         end
-		imgui.CenterText(u8""..changecmdtext)
+		imgui.CenterText(""..changecmdtext)
 		imgui.SetCursorPosX((imgui.GetWindowWidth() - 325) / 2)
-		if imgui.Button(u8'История\nизменений', imgui.ImVec2(100, 0)) then
+		if imgui.Button('История\nизменений', imgui.ImVec2(100, 0)) then
 			changelog_window_state[0] = not changelog_window_state[0]
 		end
 		imgui.SameLine()
-		if imgui.Button(u8'Проверить\nобновление', imgui.ImVec2(100, 0)) then
+		if imgui.Button('Проверить\nобновление', imgui.ImVec2(100, 0)) then
 			autoupdate(updlink,'##nil',updlink)
 		end	
 			if imgui.IsItemHovered() then
 				imgui.BeginTooltip()
 				imgui.PushTextWrapPos(600)
-					imgui.TextUnformatted(u8"Нужно будет заново прописать команду активации скрипта")
+					imgui.TextUnformatted("Нужно будет заново прописать команду активации скрипта")
 				imgui.PopTextWrapPos()
 				imgui.EndTooltip()
 			end				
 		imgui.SameLine()
-		if imgui.Button(u8'Перезапустить\nскрипт', imgui.ImVec2(100, 0)) then
+		if imgui.Button('Перезапустить\nскрипт', imgui.ImVec2(100, 0)) then
 			savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")
 			thisScript():reload()
 		end
 			if imgui.IsItemHovered() then
 				imgui.BeginTooltip()
 				imgui.PushTextWrapPos(600)
-					imgui.TextUnformatted(u8"Нужно будет заново прописать команду активации скрипта")
+					imgui.TextUnformatted("Нужно будет заново прописать команду активации скрипта")
 				imgui.PopTextWrapPos()
 				imgui.EndTooltip()
 			end		
 	end
 	imgui.Separator()
-	imgui.CenterText(u8""..updatestatustest)
+	imgui.CenterText(""..updatestatustest)
 		if imgui.IsItemClicked(0) then
 			autoupdate(updlink,'##nil',updlink)
 		end 			
 		if imgui.IsItemHovered() then
 			imgui.BeginTooltip()
 			imgui.PushTextWrapPos(600)
-			imgui.TextUnformatted(u8"ЛКМ - Проверить обновления\nПКМ - Открыть группу в вк")
+			imgui.TextUnformatted("ЛКМ - Проверить обновления\nПКМ - Открыть группу в вк")
 			imgui.PopTextWrapPos()
 			imgui.EndTooltip()
 		end		
@@ -855,13 +853,13 @@ function(two)
 	local sizeX, sizeY = getScreenResolution()
 	imgui.SetNextWindowPos(imgui.ImVec2(sizeX / 2, sizeY / 2), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))    
     imgui.SetNextWindowSize(imgui.ImVec2(400, 460), imgui.Cond.FirstUseEver, imgui.NoResize) 
-	imgui.Begin(fa.ICON_FA_NEWSPAPER .. u8'##2', changelog_window_state, imgui.WindowFlags.NoResize + imgui.WindowFlags.NoCollapse, imgui.WindowFlags.AlwaysUseWindowPadding) --  + imgui.WindowFlags.NoScrollbar
+	imgui.Begin(fa.ICON_FA_NEWSPAPER .. '##2', changelog_window_state, imgui.WindowFlags.NoResize + imgui.WindowFlags.NoCollapse, imgui.WindowFlags.AlwaysUseWindowPadding) --  + imgui.WindowFlags.NoScrollbar
 	imgui.SetCursorPosX((imgui.GetWindowWidth() - 374) / 2)  
 	imgui.Image(logo, imgui.ImVec2(374, 28))
 	imgui.SetScrollY(imgui.GetScrollMaxY())
-	-- imgui.TextWrapped(u8''..changelog)
-	imgui_text_color(u8''..changelog, true)
-    if imgui.Link(fa.ICON_FA_LINK .. u8"Незанятые иды", u8"Файл откроется в браузере, ничего скачиваться не будет") then
+	-- imgui.TextWrapped(''..changelog)
+	imgui_text_color(''..changelog, true)
+    if imgui.Link(fa.ICON_FA_LINK .. "Незанятые иды", "Файл откроется в браузере, ничего скачиваться не будет") then
         os.execute(('explorer.exe "%s"'):format(invalidID))
     end
 	if changelog_window_state[0] == false then config.settings.changelog = false; savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json"); end
@@ -1025,7 +1023,7 @@ function onScriptTerminate(LuaScript, quitGame)
 end
 
 function autoupdate(json_url, prefix, url)
-	updatestatustest = u8'Проверяю обновление.'
+	updatestatustest = 'Проверяю обновление.'
 	local dlstatus = require('moonloader').download_status
 	local json = getWorkingDirectory() .. '\\'..thisScript().name..'-version.json'
 	if doesFileExist(json) then os.remove(json) end
@@ -1043,13 +1041,13 @@ function autoupdate(json_url, prefix, url)
 			  if updateversion ~= thisScript().version then
 				lua_thread.create(function(prefix)
 				  local dlstatus = require('moonloader').download_status
-				  updatestatustest = u8'Обнаружено обновление. \nПытаюсь обновиться c '..thisScript().version..u8' на '..updateversion	
+				  updatestatustest = 'Обнаружено обновление. \nПытаюсь обновиться c '..thisScript().version..' на '..updateversion	
 				  wait(574)
 				  int_scr_download = downloadUrlToFile(updatelink, thisScript().path,
 					function(id3, status1, p13, p23)
 					  if status1 == dlstatus.STATUS_ENDDOWNLOADDATA and int_scr_download == id3 then
-						updatestatustest = u8'Загрузка обновления завершена.'	
-						updatestatustest = u8'Обновление завершено!.'
+						updatestatustest = 'Загрузка обновления завершена.'	
+						updatestatustest = 'Обновление завершено!.'
 						config.settings.changelog = true
 						savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")
 						goupdatestatus = true
@@ -1057,7 +1055,7 @@ function autoupdate(json_url, prefix, url)
 					  end
 					  if status1 == dlstatus.STATUSEX_ENDDOWNLOAD and int_scr_download == id3 then
 						if goupdatestatus == nil then
-						  updatestatustest = u8'Обновление прошло неудачно. \nЗапускаю устаревшую версию.'
+						  updatestatustest = 'Обновление прошло неудачно. \nЗапускаю устаревшую версию.'
 						  update = false
 						end
 					  end
@@ -1067,11 +1065,11 @@ function autoupdate(json_url, prefix, url)
 				)
 			  else
 				update = false
-				updatestatustest = u8'Обновление не требуется.\nТекущая версия '..thisScript().version
+				updatestatustest = 'Обновление не требуется.\nТекущая версия '..thisScript().version
 			  end
 			end
 		  else
-			updatestatustest = u8'Не могу проверить обновление. \nВозможно, что-то блокирует соединение с сервером. \nЕсли у вас есть !0AntiStealerByDarkP1xel32.ASI то удалите его и попробуйте снова.'
+			updatestatustest = 'Не могу проверить обновление. \nВозможно, что-то блокирует соединение с сервером. \nЕсли у вас есть !0AntiStealerByDarkP1xel32.ASI то удалите его и попробуйте снова.'
 			update = false
 		  end
 		end
