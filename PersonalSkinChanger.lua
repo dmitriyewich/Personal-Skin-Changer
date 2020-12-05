@@ -856,7 +856,7 @@ function(two)
 	imgui.Begin(fa.ICON_FA_NEWSPAPER .. '##2', changelog_window_state, imgui.WindowFlags.NoResize + imgui.WindowFlags.NoCollapse, imgui.WindowFlags.AlwaysUseWindowPadding) --  + imgui.WindowFlags.NoScrollbar
 	imgui.SetCursorPosX((imgui.GetWindowWidth() - 374) / 2)  
 	imgui.Image(logo, imgui.ImVec2(374, 28))
-	imgui.SetScrollY(imgui.GetScrollMaxY())
+	-- imgui.SetScrollY(imgui.GetScrollMaxY())
 	-- imgui.TextWrapped(''..changelog)
 	imgui_text_color(''..changelog, true)
     if imgui.Link(fa.ICON_FA_LINK .. "Незанятые иды", "Файл откроется в браузере, ничего скачиваться не будет") then
