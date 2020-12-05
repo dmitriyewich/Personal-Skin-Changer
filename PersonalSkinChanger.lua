@@ -12,6 +12,10 @@ local lsampev, sampev = pcall(require, 'samp.events') -- https://github.com/THE-
 local lfa, fa = pcall(require, 'fAwesome5') -- https://www.blast.hk/threads/19292/post-335148
 local llfs, lfs = pcall(require, 'lfs')
 local lziplib, ziplib = pcall(ffi.load, string.format("%s/lib/ziplib.dll",getWorkingDirectory())) 
+local lencoding, encoding = pcall(require, 'encoding') assert(lencoding, 'Library \'encoding\' not found.')
+
+u8 = encoding.UTF8
+CP1251 = encoding.CP1251
 
 ffi.cdef[[
     int zip_extract(const char *zipname, const char *dir,int *func, void *arg);
@@ -950,7 +954,7 @@ function main()
 		sampUnregisterChatCommand('fskin')
 		sampRegisterChatCommand(config.settings.cmd, function() main_window[0] = not main_window[0]; Alpha() end)
 	end	
-	sampSetClientCommandDescription(config.settings.cmd, string.format("Активация/деактивация окна %s, Файл: %s", thisScript().name, thisScript().filename))
+	sampSetClientCommandDescription(config.settings.cmd, (string.format(u8:decode"Активация/деактивация окна %s, Файл: %s", thisScript().name, thisScript().filename)))
 	
 	if config.settings.changelog == true then 
 		changelog_window_state[0] = true
