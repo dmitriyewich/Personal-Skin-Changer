@@ -6,7 +6,6 @@ script_properties('work-in-pause')
 require "moonloader"
 local dlstatus = require "moonloader".download_status
 local limgui, imgui = pcall(require, 'mimgui') -- https://github.com/THE-FYP/mimgui
-local lencoding, encoding = pcall(require, 'encoding') assert(lencoding, 'Library \'encoding\' not found.')
 local lffi, ffi = pcall(require, 'ffi') assert(lffi, 'Library \'ffi\' not found.')
 local lfaicons, faicons = pcall(require, 'fa-icons')
 local lsampev, sampev = pcall(require, 'samp.events') -- https://github.com/THE-FYP/SAMP.Lua
@@ -20,7 +19,7 @@ ffi.cdef[[
 
 local new = imgui.new
 
-local updlink = 'https://raw.githubusercontent.com/dmitriyewich/Personal-Skin-Changer/main/update.json' -- автообновление, удалите всё что в ''
+local updlink = 'https://raw.githubusercontent.com/dmitriyewich/Personal-Skin-Changer/main/update.json'
 local invalidID = 'https://raw.githubusercontent.com/dmitriyewich/Personal-Skin-Changer/main/invalidID.txt' -- незанятые иды
 
 changelog = [[
@@ -37,7 +36,7 @@ changelog = [[
 	{FFFFFF}v0.6
 {ccccd3}Переведен конфиг на json, проблемы с точкой в нике нет. Сделал сортировку новых скинов по возрастанию ида. 
 	{FFFFFF}v0.7
-{ccccd3}Добавлено автообновление(по умолчанию выключено), и мелкие дополнения\исправления. {FFFFFF}Если вы не хотите получать обновление в настройках отключите эту функцию или в файле скрипта замените содержимое 25 строки на local updlink = ''
+{ccccd3}Добавлено автообновление(по умолчанию выключено), и мелкие дополнения\исправления. {FFFFFF}Если вы не хотите получать обновление в настройках отключите эту функцию.
 	{FFFFFF}v0.8
 {ccccd3}Перевел скрипт на {FFFFFF}mimgui{ccccd3}. Мелкие фиксы, улучшения.
 	{FFFFFF}v0.9
@@ -419,10 +418,7 @@ function imgui.ButtonDisabled(...)
     imgui.PushStyleColor(imgui.Col.ButtonActive, imgui.ImVec4(0.10, 0.10, 0.10, 1.00/2))
     imgui.PushStyleColor(imgui.Col.Text, imgui.GetStyle().Colors[imgui.Col.TextDisabled])
 		local result = imgui.Button(...)
-    imgui.PopStyleColor()
-    imgui.PopStyleColor()
-    imgui.PopStyleColor()
-    imgui.PopStyleColor()
+    imgui.PopStyleColor(4)
     return result
 end
 
@@ -562,7 +558,7 @@ local cmdbuffer = imgui.new.char[128](config.settings.cmd)
 local combo = imgui.new.int(0)
 fAlpha = 0.00
 
-imgui.OnFrame(function() return main_window[0] and isSampfuncsLoaded() and isSampLoaded() and not isPauseMenuActive() and sampIsChatVisible() and not sampIsScoreboardOpen() end,
+imgui.OnFrame(function() return main_window[0] and isSampfuncsLoaded() and isSampLoaded() and not isPauseMenuActive() and not sampIsScoreboardOpen() end,
 function(one)
 	imgui.PushStyleVarFloat(imgui.StyleVar.Alpha, fAlpha)
 	local sizeX, sizeY = getScreenResolution()
@@ -718,7 +714,7 @@ function(one)
 				
 					if isModelInCdimage(index) then
 						if imgui.Button(""..index, imgui.ImVec2(30, 30)) then
-							testtextdraw(index)		
+							testtextdraw(index)
 						end
 					else
 						imgui.ButtonDisabled(""..index, imgui.ImVec2(30, 30))
@@ -981,11 +977,10 @@ function testtextdraw(arg)
 	sampTextdrawSetStyle(2048, 5) 
 	sampTextdrawSetModelRotationZoomVehColor(2048, tonumber(arg), 0.0, 0.0, 0.0, 1.0, 0, 0)
 	lua_thread.create(function()
-		wait(5000)
+		wait(1574)
 		sampTextdrawDelete(2048)
 	end)
 end
-
 
 if lsampev then
 	function sampev.onPlayerStreamIn(playerId, team, model, position, rotation, color, fightingStyle)
