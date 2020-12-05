@@ -1050,6 +1050,7 @@ function autoupdate(json_url, prefix, url)
 						config.settings.changelog = true
 						savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")
 						goupdatestatus = true
+						os.remove(getWorkingDirectory() .. '\\fskin.lua') -- удалить в 1.0.5
 						lua_thread.create(function() wait(500) thisScript():reload() end)
 					  end
 					  if status1 == dlstatus.STATUSEX_ENDDOWNLOAD and int_scr_download == id3 then
