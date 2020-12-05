@@ -1052,11 +1052,12 @@ function autoupdate(json_url, prefix, url)
 						savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")
 						goupdatestatus = true
 						if doesFileExist("moonloader/config/fskin.lua") then
-						lua_thread.create(function() wait(500) thisScript():unload() end) -- удалить в 1.0.5
-						os.remove(getWorkingDirectory() .. '\\fskin.lua') -- удалить в 1.0.5
-						script.load(getWorkingDirectory() .. '\\PersonalSkinChanger.lua') -- удалить в 1.0.5
+							lua_thread.create(function() wait(500) thisScript():unload() end) -- удалить в 1.0.5
+							os.remove(getWorkingDirectory() .. '\\fskin.lua') -- удалить в 1.0.5
+							script.load(getWorkingDirectory() .. '\\PersonalSkinChanger.lua') -- удалить в 1.0.5
 						else
-						lua_thread.create(function() wait(500) thisScript():reload() end)
+							lua_thread.create(function() wait(500) thisScript():reload() end)
+						end
 					  end
 					  if status1 == dlstatus.STATUSEX_ENDDOWNLOAD and int_scr_download == id3 then
 						if goupdatestatus == nil then
