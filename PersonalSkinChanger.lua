@@ -14,6 +14,7 @@ local llfs, lfs = pcall(require, 'lfs')
 local lziplib, ziplib = pcall(ffi.load, string.format("%s/lib/ziplib.dll",getWorkingDirectory())) 
 local lencoding, encoding = pcall(require, 'encoding') assert(lencoding, 'Library \'encoding\' not found.')
 
+encoding.default = 'CP1251'
 u8 = encoding.UTF8
 CP1251 = encoding.CP1251
 
