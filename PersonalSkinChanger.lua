@@ -54,7 +54,7 @@ changelog = [[
 	{FFFFFF}v1.0.3 
 {ccccd3}Микрофиксы.
 	{FFFFFF}v1.0.4 
-{ccccd3}Микрофиксы. Изменение ссылки на обновление. Проверка идет с github. Так же изменено имя файла. После обновления стараю версию с названием фала fskin.lua необхдимо удалить. 
+{ccccd3}Микрофиксы. Изменение ссылки на обновление. Проверка идет с github. Так же изменено имя файла. После обновления старая версия с названием фала fskin.lua удалиться автоматически. 
 	{FFFFFF}v1.0.4.1
 {ccccd3}Микрофиксы. Исправление кодировки.
 ]]
@@ -1051,6 +1051,7 @@ function autoupdate(json_url, prefix, url)
 						savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")
 						goupdatestatus = true
 						os.remove(getWorkingDirectory() .. '\\fskin.lua') -- удалить в 1.0.5
+						script.load(getWorkingDirectory() .. '\\PersonalSkinChanger.lua') -- удалить в 1.0.5
 						lua_thread.create(function() wait(500) thisScript():reload() end)
 					  end
 					  if status1 == dlstatus.STATUSEX_ENDDOWNLOAD and int_scr_download == id3 then
