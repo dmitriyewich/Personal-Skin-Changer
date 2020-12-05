@@ -1,5 +1,5 @@
 script_name('PersonalSkinChanger')
-script_version('1.0.4.2')
+script_version('1.0.4.1')
 script_author('dmitriyewich, https://vk.com/dmitriyewichmods')
 script_properties('work-in-pause')
 
