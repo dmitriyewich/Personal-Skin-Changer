@@ -104,13 +104,15 @@ local function NameModel(x)
 		[299] = "claude", [300] = "lapdna", [301] = "sfpdna", [302] = "lvpdna", [303] = "lapdpc", [304] = "lapdpd", [305] = "lvpdpc", [306] = "wfyclpd", [307] = "vbfycpd", 
 		[308] = "wfyclem", [309] = "wfycllv", [310] = "csherna", [311] = "dsherna";
 	}
-	for i, v in pairs(testNameModel) do
-        if x == i then
-            return v
-        end
-    end
+	for i = 1, #testNameModel do
+		if x == i then
+			return testNameModel[i]
+		end
+	end
     return 'None'
+
 end
+
 local function isarray(t, emptyIsObject)
 	if type(t)~='table' then return false end
 	if not next(t) then return not emptyIsObject end
@@ -714,7 +716,7 @@ function(one)
 			for k, v in pairs(config.skins) do
 				local nametoid = sampGetPlayerIdByNickname(k)
 				changeSkin(nametoid, v)
-			end
+			end		
 		else
 			lua_thread.create(function() 
 				saveskintext = 'Введи свой никнейм или другого игрока и ID скина!'
