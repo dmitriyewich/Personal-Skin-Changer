@@ -1,18 +1,22 @@
 script_name('PersonalSkinChanger')
-script_version('1.0.4.1')
+script_version('1.0.5')
 script_author('dmitriyewich, https://vk.com/dmitriyewichmods')
 script_properties('work-in-pause')
 
-require "moonloader"
+require("moonloader")
 local dlstatus = require "moonloader".download_status
 local limgui, imgui = pcall(require, 'mimgui') -- https://github.com/THE-FYP/mimgui
-local lffi, ffi = pcall(require, 'ffi') assert(lffi, 'Library \'ffi\' not found.')
+local lffi, ffi = pcall(require, 'ffi')
+assert(lffi, 'Library \'ffi\' not found.')
 local lfaicons, faicons = pcall(require, 'fa-icons')
 local lsampev, sampev = pcall(require, 'samp.events') -- https://github.com/THE-FYP/SAMP.Lua
 local lfa, fa = pcall(require, 'fAwesome5') -- https://www.blast.hk/threads/19292/post-335148
 local llfs, lfs = pcall(require, 'lfs')
 local lziplib, ziplib = pcall(ffi.load, string.format("%s/lib/ziplib.dll",getWorkingDirectory())) 
-local lencoding, encoding = pcall(require, 'encoding') assert(lencoding, 'Library \'encoding\' not found.')
+local lencoding, encoding = pcall(require, 'encoding')
+assert(lencoding, 'Library \'encoding\' not found.')
+local lvkeys, vkeys = pcall(require, 'vkeys')
+assert(lvkeys, 'Library \'vkeys\' not found.') -- Библиотека с кодами клавиш в удобном формате
 
 encoding.default = 'CP1251'
 u8 = encoding.UTF8
@@ -58,8 +62,55 @@ changelog = [[
 {ccccd3}Микрофиксы. Изменение ссылки на обновление. Проверка идет с github. Так же изменено имя файла. После обновления старая версия с названием фала fskin.lua удалиться автоматически. 
 	{FFFFFF}v1.0.4.1
 {ccccd3}Исправление кодировки после переезда на github. Микрофиксы.
+	{FFFFFF}v1.0.5
+{ccccd3}Добавлено отображение текущего/последнего скина при наведении на инпут ид скина. Добавлена функция смены скина без привзяки - /(ваша команда активации окна PSC(по умолчанию /fskin)) (ID) (IDskin). Добавлено закрытие окна PSC на ESC.
 ]]
 
+local function NameModel(x)
+	local testNameModel = {
+		[0] = "cj", [1] = "truth", [2] = "maccer", [3] = "andre", [4] = "bbthin", [5] = "bb", [6] = "emmet", [7] = "male01", [8] = "janitor", [9] = "bfori", 
+		[10] = "bfost", [11] = "vbfycrp", [12] = "bfyri", [13] = "bfyst", [14] = "bmori", [15] = "bmost", [16] = "bmyap", [17] = "bmybu", [18] = "bmybe", 
+		[19] = "bmydj", [20] = "bmyri", [21] = "bmycr", [22] = "bmyst", [23] = "wmybmx", [24] = "wbdyg1", [25] = "wbdyg2", [26] = "wmybp", [27] = "wmycon", 
+		[28] = "bmydrug", [29] = "wmydrug", [30] = "hmydrug", [31] = "dwfolc", [32] = "dwmolc1", [33] = "dwmolc2", [34] = "dwmylc1", [35] = "hmogar", [36] = "wmygol1", 
+		[37] = "wmygol2", [38] = "hfori", [39] = "hfost", [40] = "hfyri", [41] = "hfyst", [42] = "jethro", [43] = "hmori", [44] = "hmost", [45] = "hmybe", [46] = "hmyri", 
+		[47] = "hmycr", [48] = "hmyst", [49] = "omokung", [50] = "wmymech", [51] = "bmymoun", [52] = "wmymoun", [53] = "ofori", [54] = "ofost", [55] = "ofyri", [56] = "ofyst", 
+		[57] = "omori", [58] = "omost", [59] = "omyri", [60] = "omyst", [61] = "wmyplt", [62] = "wmopj", [63] = "bfypro", [64] = "hfypro", [65] = "kendl", [66] = "bmypol1", 
+		[67] = "bmypol2", [68] = "wmoprea", [69] = "sbfyst", [70] = "wmosci", [71] = "wmysgrd", [72] = "swmyhp1", [73] = "swmyhp2", [74] = "-", [75] = "swfopro", [76] = "wfystew", 
+		[77] = "swmotr1", [78] = "wmotr1", [79] = "bmotr1", [80] = "vbmybox", [81] = "vwmybox", [82] = "vhmyelv", [83] = "vbmyelv", [84] = "vimyelv", [85] = "vwfypro", 
+		[86] = "ryder3", [87] = "vwfyst1", [88] = "wfori", [89] = "wfost", [90] = "wfyjg", [91] = "wfyri", [92] = "wfyro", [93] = "wfyst", [94] = "wmori", [95] = "wmost", 
+		[96] = "wmyjg", [97] = "wmylg", [98] = "wmyri", [99] = "wmyro", [100] = "wmycr", [101] = "wmyst", [102] = "ballas1", [103] = "ballas2", [104] = "ballas3", [105] = "fam1", 
+		[106] = "fam2", [107] = "fam3", [108] = "lsv1", [109] = "lsv2", [110] = "lsv3", [111] = "maffa", [112] = "maffb", [113] = "mafboss", [114] = "vla1", [115] = "vla2", 
+		[116] = "vla3", [117] = "triada", [118] = "triadb", [119] = "sindaco", [120] = "triboss", [121] = "dnb1", [122] = "dnb2", [123] = "dnb3", [124] = "vmaff1", 
+		[125] = "vmaff2", [126] = "vmaff3", [127] = "vmaff4", [128] = "dnmylc", [129] = "dnfolc1", [130] = "dnfolc2", [131] = "dnfylc", [132] = "dnmolc1", [133] = "dnmolc2", 
+		[134] = "sbmotr2", [135] = "swmotr2", [136] = "sbmytr3", [137] = "swmotr3", [138] = "wfybe", [139] = "bfybe", [140] = "hfybe", [141] = "sofybu", [142] = "sbmyst", [143] = "sbmycr", 
+		[144] = "bmycg", [145] = "wfycrk", [146] = "hmycm", [147] = "wmybu", [148] = "bfybu", [149] = "smokev", [150] = "wfybu", [151] = "dwfylc1", [152] = "wfypro", [153] = "wmyconb", 
+		[154] = "wmybe", [155] = "wmypizz", [156] = "bmobar", [157] = "cwfyhb", [158] = "cwmofr", [159] = "cwmohb1", [160] = "cwmohb2", [161] = "cwmyfr", [162] = "cwmyhb1", 
+		[163] = "bmyboun", [164] = "wmyboun", [165] = "wmomib", [166] = "bmymib", [167] = "wmybell", [168] = "bmochil", [169] = "sofyri", [170] = "somyst", [171] = "vwmybjd", 
+		[172] = "vwfycrp", [173] = "sfr1", [174] = "sfr2", [175] = "sfr3", [176] = "bmybar", [177] = "wmybar", [178] = "wfysex", [179] = "wmyammo", [180] = "bmytatt", 
+		[181] = "vwmycr", [182] = "vbmocd", [183] = "vbmycr", [184] = "vhmycr", [185] = "sbmyri", [186] = "somyri", [187] = "somybu", [188] = "swmyst", [189] = "wmyva", 
+		[190] = "copgrl3", [191] = "gungrl3", [192] = "mecgrl3", [193] = "nurgrl3", [194] = "crogrl3", [195] = "gangrl3", [196] = "cwfofr", [197] = "cwfohb", 
+		[198] = "cwfyfr1", [199] = "cwfyfr2", [200] = "cwmyhb2", [201] = "dwfylc2", [202] = "dwmylc2", [203] = "omykara", [204] = "wmykara", [205] = "wfyburg", 
+		[206] = "vwmycd", [207] = "vhfypro", [208] = "suzie", [209] = "omonood", [210] = "omoboat", [211] = "wfyclot", [212] = "vwmotr1", [213] = "vwmotr2", 
+		[214] = "vwfywai", [215] = "sbfori", [216] = "swfyri", [217] = "wmyclot", [218] = "sbfost", [219] = "sbfyri", [220] = "sbmocd", [221] = "sbmori", 
+		[222] = "sbmost", [223] = "shmycr", [224] = "sofori", [225] = "sofost", [226] = "sofyst", [227] = "somobu", [228] = "somori", [229] = "somost", 
+		[230] = "swmotr5", [231] = "swfori", [232] = "swfost", [233] = "swfyst", [234] = "swmocd", [235] = "swmori", [236] = "swmost", [237] = "shfypro", 
+		[238] = "sbfypro", [239] = "swmotr4", [240] = "swmyri", [241] = "smyst", [242] = "smyst2", [243] = "sfypro", [244] = "vbfyst2", [245] = "vbfypro", 
+		[246] = "vhfyst3", [247] = "bikera", [248] = "bikerb", [249] = "bmypimp", [250] = "swmycr", [251] = "wfylg", [252] = "wmyva2", [253] = "bmosec", 
+		[254] = "bikdrug", [255] = "wmych", [256] = "sbfystr", [257] = "swfystr", [258] = "heck1", [259] = "heck2", [260] = "bmycon", [261] = "wmycd1", 
+		[262] = "bmocd", [263] = "vwfywa2", [264] = "wmoice", [265] = "tenpen", [266] = "pulaski", [267] = "hern", [268] = "dwayne", [269] = "smoke", [270] = "sweet", 
+		[271] = "ryder", [272] = "forelli", [273] = "tbone", [274] = "laemt1", [275] = "lvemt1", [276] = "sfemt1", [277] = "lafd1", [278] = "lvfd1", [279] = "sffd1", 
+		[280] = "lapd1", [281] = "sfpd1", [282] = "lvpd1", [283] = "csher", [284] = "lapdm1", [285] = "swat", [286] = "fbi", [287] = "army", [288] = "dsher", [289] = "zero", 
+		[290] = "rose", [291] = "paul", [292] = "cesar", [293] = "ogloc", [294] = "wuzimu", [295] = "torino", [296] = "jizzy", [297] = "maddogg", [298] = "cat", 
+		[299] = "claude", [300] = "lapdna", [301] = "sfpdna", [302] = "lvpdna", [303] = "lapdpc", [304] = "lapdpd", [305] = "lvpdpc", [306] = "wfyclpd", [307] = "vbfycpd", 
+		[308] = "wfyclem", [309] = "wfycllv", [310] = "csherna", [311] = "dsherna";
+	}
+	for i, v in pairs(testNameModel) do
+        if x == i then
+            return v
+        end
+    end
+    return 'None'
+end
 local function isarray(t, emptyIsObject)
 	if type(t)~='table' then return false end
 	if not next(t) then return not emptyIsObject end
@@ -264,6 +315,8 @@ end
 local config = {}
 local updatestatustest = ''
 local updatestatusonof = ''
+local skin_id = ''
+local last_skin_id = 'None'
 local saveskintext = ''
 local changecmdtext = ''
 if doesFileExist("moonloader/config/PersonalSkinChanger.json") then
@@ -317,7 +370,8 @@ local function loadIconicFont(fontSize)
 	imgui.GetIO().Fonts:AddFontFromMemoryCompressedBase85TTF(faicons.get_font_data_base85(), fontSize, config, iconRanges)
 end
 
-function apply_custom_style()					 
+function apply_custom_style()	
+	imgui.SwitchContext()
     local style = imgui.GetStyle()
     local colors = style.Colors
     local clr = imgui.Col
@@ -583,7 +637,7 @@ function(one)
 	imgui.Separator()
 	imgui.Text(' Введите ник')
 	imgui.SameLine()
-	imgui.PushItemWidth(174)
+	imgui.PushItemWidth(147)
 	local buffer_size = ffi.sizeof(nick)
 	imgui.InputTextWithHint('##Введите ник3', 'Nick_Name', nick, ffi.sizeof(nick) - 1, imgui.InputTextFlags.AutoSelectAll)
 	imgui.PopItemWidth()
@@ -593,6 +647,20 @@ function(one)
 	imgui.PushItemWidth(47)
 	imgui.InputTextWithHint('##ID skin', '74', idskin, ffi.sizeof(idskin) - 1, imgui.InputTextFlags.CharsDecimal + imgui.InputTextFlags.AutoSelectAll)
 	imgui.PopItemWidth()
+	if ffi.string(nick) ~= '' then	
+		if imgui.IsItemHovered() then
+			imgui.BeginTooltip()
+			imgui.PushTextWrapPos(600)
+			imgui.TextUnformatted(--[[fa.ICON_FA_QUESTION .. ]]'Текущий скин: '.. skin_id ..'('.. NameModel(skin_id).. ')\nПоследний скин: ' .. last_skin_id..'('.. NameModel(last_skin_id).. ')')
+			if config.skinslast[ffi.string(nick)] then
+				last_skin_id = config.skinslast[ffi.string(nick)]
+			else
+				last_skin_id = 'None'
+			end
+			imgui.PopTextWrapPos()
+			imgui.EndTooltip()
+		end	
+	end
 	local allChars, SkinsRaius = getAllChars(), {}	-- функция получение идов и ников игроков в радиусе от игрока
 	local radius = 25 --Радиус действия, по умолчанию - 25 метров
     local myPosX, myPosY, myPosZ = getCharCoordinates(PLAYER_PED)
@@ -603,6 +671,8 @@ function(one)
 			SkinsRaiusTable = imgui.new['const char*'][#SkinsRaius](SkinsRaius)
         end
     end
+
+
 	imgui.PushItemWidth(200)
 	imgui.Text(' Ближайший игрок')
 	imgui.SameLine()
@@ -619,8 +689,8 @@ function(one)
 	imgui.PopItemWidth()		
 	imgui.SetCursorPosX((imgui.GetWindowWidth() - 370) / 2)
 	if imgui.Button('Привязать скин к имени', imgui.ImVec2(370, 30)) then
-		config.skins[ffi.string(nick)] = ffi.string(idskin) -- запоминание привязанного ника к иду
-		if ffi.string(nick) ~= nil and ffi.string(idskin) ~= nil then
+		if ffi.string(nick) ~= '' and ffi.string(idskin) ~= '' then
+			config.skins[ffi.string(nick)] = ffi.string(idskin) -- запоминание привязанного ника к иду
 			if not config.skinslast[ffi.string(nick)] then
 				if ffi.string(nick) == sampGetPlayerNickname(select(2, sampGetPlayerIdByCharHandle(PLAYER_PED))) then
 					modelId = getCharModel(PLAYER_PED)
@@ -636,15 +706,34 @@ function(one)
 				end
 			end
 			savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json") -- сохранение в конфиг json привязанного ника к иду			
-			lua_thread.create(function() saveskintext = ""..(ffi.string(nick))..' - '..(ffi.string(idskin))..' успешно сохранено'; wait(2574); saveskintext = ''; end)
+			lua_thread.create(function()
+				saveskintext = ""..(ffi.string(nick))..' - '..(ffi.string(idskin))..' успешно сохранено'
+				wait(2574)
+				saveskintext = ''
+			end)
 			for k, v in pairs(config.skins) do
 				local nametoid = sampGetPlayerIdByNickname(k)
 				changeSkin(nametoid, v)
 			end
 		else
-			lua_thread.create(function() saveskintext = 'Введи свой никнейм или другого игрока и ID скина!'; wait(2574); saveskintext = ''; end)	
+			lua_thread.create(function() 
+				saveskintext = 'Введи свой никнейм или другого игрока и ID скина!'
+				wait(2574)
+				saveskintext = ''
+			end)	
 		end	
 	end
+	if ffi.string(nick) ~= '' then
+		nameid = sampGetPlayerIdByNickname(ffi.string(nick))
+		result, pped = sampGetCharHandleBySampPlayerId(nameid)
+		if result then
+			skin_id = getCharModel(pped)
+			-- skin_id = mid
+			else 
+			skin_id = getCharModel(PLAYER_PED)
+			-- skin_id = sID
+		end
+	end	
 	imgui.CenterText(""..saveskintext)
 	if imgui.CollapsingHeader('Привязанные скины') then
 		for q, w in pairs(config.skins) do
@@ -838,7 +927,7 @@ end)
 				fAlpha = 0.00		
 					repeat
 						fAlpha = fAlpha + 0.05
-						wait(7)
+						wait(1)
 					until( fAlpha >= 1.00 )
 				
 			end
@@ -848,7 +937,8 @@ end)
 		end)	
 	end
 	
-imgui.OnFrame(function() return changelog_window_state[0] and isSampfuncsLoaded() and isSampLoaded() and not isPauseMenuActive() and sampIsChatVisible() and not sampIsScoreboardOpen() end,
+imgui.OnFrame(function() return changelog_window_state[0] and isSampfuncsLoaded() and isSampLoaded() and 
+not isPauseMenuActive() and sampIsChatVisible() and not sampIsScoreboardOpen() end,
 function(two)
 	imgui.PushStyleVarFloat(imgui.StyleVar.Alpha, fAlpha)
 	local sizeX, sizeY = getScreenResolution()
@@ -863,7 +953,9 @@ function(two)
     if imgui.Link(fa.ICON_FA_LINK .. "Незанятые иды", "Файл откроется в браузере, ничего скачиваться не будет") then
         os.execute(('explorer.exe "%s"'):format(invalidID))
     end
-	if changelog_window_state[0] == false then config.settings.changelog = false; savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json"); end
+	if changelog_window_state[0] == false then config.settings.changelog = false
+		savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")
+	end
 	imgui.End()
 end)	
 function imgui.Link(label, description)
@@ -950,13 +1042,34 @@ function main()
 		autoupdate(updlink,'##nil',updlink)
 	end	
 	if config.settings.cmd == 'fskin' then
-		sampRegisterChatCommand('fskin', function() main_window[0] = not main_window[0]; Alpha() end)
+		sampRegisterChatCommand('fskin', function(param) 
+			local id, skinId = string.match(param, "(%d+) (%d+)") -- %d+ - Это числа
+			if id == nil or skinId == "" then -- Если ID - не вписан и skinId "" - пусто, то
+				main_window[0] = not main_window[0]
+				Alpha()
+			else -- Иначе
+				lua_thread.create(function()
+				   changeSkin(id, skinId)
+				end)
+			end
+		end)
+		sampSetClientCommandDescription(config.settings.cmd, (string.format(u8:decode'Активация/деактивация окна %s, /%s id IdSkin(смена скина без привязки), Файл: %s', thisScript().name, config.settings.cmd, thisScript().filename)))
 	else
 		sampUnregisterChatCommand('fskin')
-		sampRegisterChatCommand(config.settings.cmd, function() main_window[0] = not main_window[0]; Alpha() end)
+		sampRegisterChatCommand(config.settings.cmd, function(param)
+			local id, skinId = string.match(param, "(%d+) (%d+)") -- %d+ - Это числа
+			if id == nil or skinId == "" then -- Если ID - не вписан и skinId "" - пусто, то
+				main_window[0] = not main_window[0]
+				Alpha()
+			else -- Иначе
+				lua_thread.create(function()
+				   changeSkin(id, skinId)
+				end)
+			end
+		end)
+		sampSetClientCommandDescription(config.settings.cmd, (string.format(u8:decode'Активация/деактивация окна %s, /%s id IdSkin(смена скина без привязки), Файл: %s', thisScript().name, config.settings.cmd, thisScript().filename)))
 	end	
-	sampSetClientCommandDescription(config.settings.cmd, (string.format(u8:decode"Активация/деактивация окна %s, Файл: %s", thisScript().name, thisScript().filename)))
-	
+
 	if config.settings.changelog == true then 
 		changelog_window_state[0] = true
 	else
@@ -1016,6 +1129,18 @@ if lsampev then
 		return {playerId, skinId}
 	end
 end
+
+function onWindowMessage(msg, wparam, lparam)
+	if msg == 0x100 or msg == 0x101 then
+		if wparam == vkeys.VK_ESCAPE and  main_window[0] and not isPauseMenuActive() then
+			consumeWindowMessage(true, false)
+			if msg == 0x101 then
+				main_window[0] = false
+			end
+		end
+	end
+end
+
 function onScriptTerminate(LuaScript, quitGame)
     if LuaScript == thisScript() and not quitGame then
         showCursor(false, false)
