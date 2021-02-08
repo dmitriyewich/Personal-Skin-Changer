@@ -1,7 +1,11 @@
 script_name('PersonalSkinChanger')
-script_version('1.0.5')
 script_author('dmitriyewich, https://vk.com/dmitriyewichmods')
+script_description("The usual fakeskin on hooks, mimgui. Sets an individual skin by the player's nickname. Any time the server changes the skin, you will have the skin you installed. When unlinking a skin, the skin that was before binding is returned.")
+script_url("https://vk.com/dmitriyewichmods")
+script_dependencies("ffi","encoding", "mimgui", "vkeys", "ziplib", "lfs", "faicons", "fAwesome5", "samp.events")
 script_properties('work-in-pause')
+script_version('1.1')
+script_version_number(11)
 
 require("moonloader")
 local dlstatus = require "moonloader".download_status
@@ -21,6 +25,7 @@ assert(lvkeys, 'Library \'vkeys\' not found.') -- Библиотека с код
 encoding.default = 'CP1251'
 u8 = encoding.UTF8
 CP1251 = encoding.CP1251
+
 
 ffi.cdef[[
     int zip_extract(const char *zipname, const char *dir,int *func, void *arg);
@@ -64,6 +69,8 @@ changelog = [[
 {ccccd3}Исправление кодировки после переезда на github. Микрофиксы.
 	{FFFFFF}v1.0.5
 {ccccd3}Добавлено отображение текущего/последнего скина при наведении на инпут ид скина. Добавлена функция смены скина без привзяки - /(ваша команда активации окна PSC(по умолчанию /fskin)) (ID) (IDskin). Добавлено закрытие окна PSC на ESC.
+	{FFFFFF}v1.1
+{ccccd3}Изменен стиль, добавлены альтернативные стили, можно изменить в настройках. Добавлено гендерное разделение стандартных скинов. Добавлен новый вид предпросмотра скинов(переключить можно в Настройки - Предпросмотр скинов). Добавлен хук на подмену скина в инвентаре аризоны, ид одежды так же меняется(включается в настройках).
 ]]
 
 local function NameModel(x)
@@ -334,6 +341,9 @@ else
         ["settings"] = {
             ["autoupdate"] = false,
 			["changelog"] = true,
+			["style"] = {['name'] ='Standart', ['selected'] = 1},
+			["arztextdrawactive"] = false,
+			["preview_method"] = false,
 			["cmd"] = "fskin";
         },
         ["skinslast"] = { -- ид скина до привязки, пока такой костыль
@@ -350,275 +360,729 @@ function sampGetPlayerIdByNickname(nick)
 end
 
 if limgui then
-local TBDonHomka = {}
-local fonts = {}
-local fontsArray = {}
-local fontSize = new.int(0)
+	local TBDonHomka = {}
+	local fonts = {}
+	local fontsArray = {}
+	local fontSize = new.int(0)
 
-TBDonHomka._SETTINGS = {
-    HotKey = {
-        noKeysMessage = "No"
-    }
-}
+	TBDonHomka._SETTINGS = {
+		HotKey = {
+			noKeysMessage = "No"
+		}
+	}
 
-local fa_font = nil
-local fa_glyph_ranges = imgui.new.ImWchar[3](fa.min_range, fa.max_range, 0)
-local function loadIconicFont(fontSize)
-	-- Load iconic font in merge mode
-	local config = imgui.ImFontConfig()
-	config.MergeMode = true
-	config.PixelSnapH = true
-	local iconRanges = imgui.new.ImWchar[3](faicons.min_range, faicons.max_range, 0)
-	imgui.GetIO().Fonts:AddFontFromMemoryCompressedBase85TTF(faicons.get_font_data_base85(), fontSize, config, iconRanges)
-end
-
-function apply_custom_style()	
-	imgui.SwitchContext()
-    local style = imgui.GetStyle()
-    local colors = style.Colors
-    local clr = imgui.Col
-    local ImVec4 = imgui.ImVec4
-	style.WindowRounding = 5.0
-	style.WindowTitleAlign = imgui.ImVec2(0.5, 0.5)
-	style.FrameRounding = 4.0
-	style.ItemSpacing = imgui.ImVec2(12, 8)
-	style.ItemInnerSpacing = imgui.ImVec2(8, 6) 
-	style.IndentSpacing = 25.0
-	style.ScrollbarSize = 13.0
-	style.ScrollbarRounding = 9.0
-	style.GrabMinSize = 5.0
-	style.GrabRounding = 3.0
-	style.WindowBorderSize = 0.0
-	style.WindowPadding = imgui.ImVec2(4.0, 4.0)
-	style.FramePadding = imgui.ImVec2(5, 5)
-	style.ButtonTextAlign = imgui.ImVec2(0.5, 0.35)
-	style.WindowMinSize = imgui.ImVec2(0, 0)
-
-	colors[clr.Text] = ImVec4(0.80, 0.80, 0.83, 1.00)
-	colors[clr.TextDisabled] = ImVec4(0.24, 0.23, 0.29, 1.00)
-	colors[clr.WindowBg] = ImVec4(0.06, 0.05, 0.07, 1.00)
-	colors[clr.PopupBg] = ImVec4(0.07, 0.07, 0.09, 1.00)												
-	colors[clr.Border] = ImVec4(0.80, 0.80, 0.83, 0.88)
-	colors[clr.BorderShadow] = ImVec4(0.92, 0.91, 0.88, 0.00)
-	colors[clr.FrameBg] = ImVec4(0.10, 0.09, 0.12, 1.00)
-	colors[clr.FrameBgHovered] = ImVec4(0.24, 0.23, 0.29, 1.00)
-	colors[clr.FrameBgActive] = ImVec4(0.56, 0.56, 0.58, 1.00)
-	colors[clr.TitleBg] = ImVec4(0.10, 0.09, 0.12, 1.00)
-	colors[clr.TitleBgActive] = ImVec4(0.07, 0.07, 0.09, 1.00)
-	colors[clr.TitleBgCollapsed] = ImVec4(1.00, 0.98, 0.95, 0.75)
-	colors[clr.MenuBarBg] = ImVec4(0.10, 0.09, 0.12, 1.00)
-	colors[clr.ScrollbarBg] = ImVec4(0.02, 0.02, 0.02, 0.53)
-	colors[clr.ScrollbarGrab] = ImVec4(0.80, 0.80, 0.83, 0.31)
-	colors[clr.ScrollbarGrabHovered] = ImVec4(0.56, 0.56, 0.58, 1.00)
-	colors[clr.ScrollbarGrabActive] = ImVec4(0.06, 0.05, 0.07, 1.00)
-	colors[clr.CheckMark] = ImVec4(0.98, 0.26, 0.26, 1.00)
-	colors[clr.SliderGrab] = ImVec4(0.28, 0.28, 0.28, 1.00)
-	colors[clr.SliderGrabActive] = ImVec4(0.06, 0.05, 0.07, 1.00)
-	colors[clr.Button] = ImVec4(0.10, 0.09, 0.12, 1.00)
-	colors[clr.ButtonHovered] = ImVec4(0.24, 0.23, 0.29, 1.00)
-	colors[clr.ButtonActive] = ImVec4(0.56, 0.56, 0.58, 1.00)
-	colors[clr.Header] = ImVec4(0.10, 0.09, 0.12, 1.00)
-	colors[clr.HeaderHovered] = ImVec4(0.56, 0.56, 0.58, 1.000)
-	colors[clr.HeaderActive] = ImVec4(0.06, 0.05, 0.07, 1.00)
-	colors[clr.Separator] = colors[clr.Border]
-	colors[clr.SeparatorHovered] = ImVec4(0.26, 0.59, 0.98, 0.78)
-	colors[clr.SeparatorActive] = ImVec4(0.26, 0.59, 0.98, 1.00)
-	colors[clr.ResizeGrip] = ImVec4(0.00, 0.00, 0.00, 0.00)
-	colors[clr.ResizeGripHovered] = ImVec4(0.56, 0.56, 0.58, 1.00)
-	colors[clr.ResizeGripActive] = ImVec4(0.06, 0.05, 0.07, 1.00)
-	colors[clr.PlotLines] = ImVec4(0.40, 0.39, 0.38, 0.63)
-	colors[clr.PlotLinesHovered] = ImVec4(0.25, 1.00, 0.00, 1.00)
-	colors[clr.PlotHistogram] = ImVec4(0.40, 0.39, 0.38, 0.63)
-	colors[clr.PlotHistogramHovered] = ImVec4(0.25, 1.00, 0.00, 1.00)
-	colors[clr.TextSelectedBg] = ImVec4(0.25, 1.00, 0.00, 0.43)
-end
-
-imgui.OnInitialize(function() -- Called once
-	apply_custom_style() -- применим кастомный стиль
-	-- Find all installed fonts
-	local search, file = findFirstFile(getFolderPath(0x14) .. '\\*.ttf')
-	while file do
-		table.insert(fonts, file)
-		file = findNextFile(search)
+	local fa_font = nil
+	local fa_glyph_ranges = imgui.new.ImWchar[3](fa.min_range, fa.max_range, 0)
+	local function loadIconicFont(fontSize)
+		-- Load iconic font in merge mode
+		local config = imgui.ImFontConfig()
+		config.MergeMode = true
+		config.PixelSnapH = true
+		local iconRanges = imgui.new.ImWchar[3](faicons.min_range, faicons.max_range, 0)
+		imgui.GetIO().Fonts:AddFontFromMemoryCompressedBase85TTF(faicons.get_font_data_base85(), fontSize, config, iconRanges)
 	end
-	fontsArray = imgui.new['const char*'][#fonts](fonts)
 
-	-- Disable ini config. By default it is saved to moonloader/config/mimgui/%scriptfilename%.ini
-	imgui.GetIO().IniFilename = nil
+	function Standart()	
+		imgui.SwitchContext()
+		local style = imgui.GetStyle()
+		local colors = style.Colors
+		local clr = imgui.Col
+		local ImVec4 = imgui.ImVec4
+		local ImVec2 = imgui.ImVec2
+		
+		style.PopupRounding = 3;
+		style.WindowBorderSize = 1;
+		style.ChildBorderSize  = 1;
+		style.PopupBorderSize  = 1;
+		style.FrameBorderSize  = 1; 
+		style.WindowTitleAlign = imgui.ImVec2(0.5, 0.5)
+		style.ChildRounding     = 3;
+		style.WindowPadding = ImVec2(15, 15)
+		style.WindowRounding = 15.0
+		style.FramePadding = ImVec2(5, 5)
+		style.ItemSpacing = ImVec2(12, 8)
+		style.ItemInnerSpacing = ImVec2(8, 6)
+		style.IndentSpacing = 25.0
+		style.ScrollbarSize = 8.0
+		style.ScrollbarRounding = 15.0
+		style.GrabMinSize = 15.0
+		style.GrabRounding = 7.0
+		style.FrameRounding = 6.0
 
-	-- Add font with icons
-	fontSize[0] = imgui.GetIO().Fonts.ConfigData.Data[0].SizePixels
-	loadIconicFont(fontSize[0])
-
-	-- All icons string
-	local icons = {}
-	for k, v in pairs(faicons) do
-		icons[#icons + 1] = v
+		colors[clr.Text] = ImVec4(0.80, 0.80, 0.83, 1.00)
+		colors[clr.TextDisabled] = ImVec4(0.24, 0.23, 0.29, 1.00)
+		colors[clr.WindowBg] = ImVec4(0.06, 0.05, 0.07, 1.00)
+		colors[clr.PopupBg] = ImVec4(0.07, 0.07, 0.09, 1.00)												
+		colors[clr.Border] = ImVec4(0.30, 0.30, 0.30, 0.80)
+		colors[clr.BorderShadow] = ImVec4(0.92, 0.91, 0.88, 0.00)
+		colors[clr.FrameBg] = ImVec4(0.10, 0.09, 0.12, 1.00)
+		colors[clr.FrameBgHovered] = ImVec4(0.24, 0.23, 0.29, 1.00)
+		colors[clr.FrameBgActive] = ImVec4(0.56, 0.56, 0.58, 1.00)
+		colors[clr.TitleBg] = ImVec4(0.10, 0.09, 0.12, 1.00)
+		colors[clr.TitleBgActive] = ImVec4(0.07, 0.07, 0.09, 1.00)
+		colors[clr.TitleBgCollapsed] = ImVec4(1.00, 0.98, 0.95, 0.75)
+		colors[clr.MenuBarBg] = ImVec4(0.10, 0.09, 0.12, 1.00)
+		colors[clr.ScrollbarBg] = ImVec4(0.02, 0.02, 0.02, 0.53)
+		colors[clr.ScrollbarGrab] = ImVec4(0.80, 0.80, 0.83, 0.31)
+		colors[clr.ScrollbarGrabHovered] = ImVec4(0.56, 0.56, 0.58, 1.00)
+		colors[clr.ScrollbarGrabActive] = ImVec4(0.06, 0.05, 0.07, 1.00)
+		colors[clr.CheckMark] = ImVec4(0.98, 0.26, 0.26, 1.00)
+		colors[clr.SliderGrab] = ImVec4(0.28, 0.28, 0.28, 1.00)
+		colors[clr.SliderGrabActive] = ImVec4(0.06, 0.05, 0.07, 1.00)
+		colors[clr.Button] = ImVec4(0.10, 0.09, 0.12, 1.00)
+		colors[clr.ButtonHovered] = ImVec4(0.24, 0.23, 0.29, 1.00)
+		colors[clr.ButtonActive] = ImVec4(0.56, 0.56, 0.58, 1.00)
+		colors[clr.Header] = ImVec4(0.10, 0.09, 0.12, 1.00)
+		colors[clr.HeaderHovered] = ImVec4(0.56, 0.56, 0.58, 1.000)
+		colors[clr.HeaderActive] = ImVec4(0.06, 0.05, 0.07, 1.00)
+		colors[clr.Separator] = colors[clr.Border]
+		colors[clr.SeparatorHovered] = ImVec4(0.26, 0.59, 0.98, 0.78)
+		colors[clr.SeparatorActive] = ImVec4(0.26, 0.59, 0.98, 1.00)
+		colors[clr.ResizeGrip] = ImVec4(0.00, 0.00, 0.00, 0.00)
+		colors[clr.ResizeGripHovered] = ImVec4(0.56, 0.56, 0.58, 1.00)
+		colors[clr.ResizeGripActive] = ImVec4(0.06, 0.05, 0.07, 1.00)
+		colors[clr.PlotLines] = ImVec4(0.40, 0.39, 0.38, 0.63)
+		colors[clr.PlotLinesHovered] = ImVec4(0.25, 1.00, 0.00, 1.00)
+		colors[clr.PlotHistogram] = ImVec4(0.40, 0.39, 0.38, 0.63)
+		colors[clr.PlotHistogramHovered] = ImVec4(0.25, 1.00, 0.00, 1.00)
+		colors[clr.TextSelectedBg] = ImVec4(0.25, 1.00, 0.00, 0.43)
 	end
-	iconsText = table.concat(icons, '\t')
-	
-	logo = imgui.CreateTextureFromFileInMemory(_logo, #_logo)
 
-    TBDonHomka._SETTINGS.ToggleButton = {
-        scale = 1.0,
-        AnimSpeed = 0.13,
-        colors = {
-            imgui.GetStyle().Colors[imgui.Col.ButtonActive], -- Enable circle
-            imgui.ImVec4(150 / 255, 150 / 255, 150 / 255, 1.0), -- Disable circle
-            imgui.GetStyle().Colors[imgui.Col.FrameBgHovered], -- Enable rect
-            imgui.ImVec4(100 / 255, 100 / 255, 100 / 255, 180 / 255) -- Disable rect
-        }
-    }
-end)
+	function CorporateGrey() -- by malamanteau
+		imgui.SwitchContext()
+		local style = imgui.GetStyle()
+		local colors = style.Colors
+		local clr = imgui.Col
+		local ImVec4 = imgui.ImVec4
+		local ImVec2 = imgui.ImVec2
+		
+		style.PopupRounding = 3;
+		style.WindowBorderSize = 1;
+		style.ChildBorderSize  = 1;
+		style.PopupBorderSize  = 1;
+		style.FrameBorderSize  = 1; 
+		style.WindowTitleAlign = imgui.ImVec2(0.5, 0.5)
+		style.ChildRounding     = 3;
+		style.WindowPadding = ImVec2(15, 15)
+		style.WindowRounding = 15.0
+		style.FramePadding = ImVec2(5, 5)
+		style.ItemSpacing = ImVec2(12, 8)
+		style.ItemInnerSpacing = ImVec2(8, 6)
+		style.IndentSpacing = 25.0
+		style.ScrollbarSize = 8.0
+		style.ScrollbarRounding = 15.0
+		style.GrabMinSize = 15.0
+		style.GrabRounding = 7.0
+		style.FrameRounding = 6.0
+		
+		colors[clr.Text]                   = ImVec4(1.00, 1.00, 1.00, 1.00);
+		colors[clr.TextDisabled]           = ImVec4(0.40, 0.40, 0.40, 1.00);
+		colors[clr.ChildBg]                = ImVec4(0.25, 0.25, 0.25, 1.00);
+		colors[clr.WindowBg]               = ImVec4(0.25, 0.25, 0.25, 1.00);
+		colors[clr.PopupBg]                = ImVec4(0.25, 0.25, 0.25, 1.00);
+		colors[clr.Border]                 = ImVec4(0.12, 0.12, 0.12, 0.71);
+		colors[clr.BorderShadow]           = ImVec4(1.00, 1.00, 1.00, 0.06);
+		colors[clr.FrameBg]                = ImVec4(0.42, 0.42, 0.42, 0.54);
+		colors[clr.FrameBgHovered]         = ImVec4(0.42, 0.42, 0.42, 0.40);
+		colors[clr.FrameBgActive]          = ImVec4(0.56, 0.56, 0.56, 0.67);
+		colors[clr.TitleBg]                = ImVec4(0.19, 0.19, 0.19, 1.00);
+		colors[clr.TitleBgActive]          = ImVec4(0.22, 0.22, 0.22, 1.00);
+		colors[clr.TitleBgCollapsed]       = ImVec4(0.17, 0.17, 0.17, 0.90);
+		colors[clr.MenuBarBg]              = ImVec4(0.335, 0.335, 0.335, 1.000);
+		colors[clr.ScrollbarBg]            = ImVec4(0.24, 0.24, 0.24, 0.53);
+		colors[clr.ScrollbarGrab]          = ImVec4(0.41, 0.41, 0.41, 1.00);
+		colors[clr.ScrollbarGrabHovered]   = ImVec4(0.52, 0.52, 0.52, 1.00);
+		colors[clr.ScrollbarGrabActive]    = ImVec4(0.76, 0.76, 0.76, 1.00);
+		colors[clr.CheckMark]              = ImVec4(0.65, 0.65, 0.65, 1.00);
+		colors[clr.SliderGrab]             = ImVec4(0.52, 0.52, 0.52, 1.00);
+		colors[clr.SliderGrabActive]       = ImVec4(0.64, 0.64, 0.64, 1.00);
+		colors[clr.Button]                 = ImVec4(0.54, 0.54, 0.54, 0.35);
+		colors[clr.ButtonHovered]          = ImVec4(0.52, 0.52, 0.52, 0.59);
+		colors[clr.ButtonActive]           = ImVec4(0.76, 0.76, 0.76, 1.00);
+		colors[clr.Header]                 = ImVec4(0.38, 0.38, 0.38, 1.00);
+		colors[clr.HeaderHovered]          = ImVec4(0.47, 0.47, 0.47, 1.00);
+		colors[clr.HeaderActive]           = ImVec4(0.76, 0.76, 0.76, 0.77);
+		colors[clr.Separator]              = ImVec4(0.000, 0.000, 0.000, 0.137);
+		colors[clr.SeparatorHovered]       = ImVec4(0.700, 0.671, 0.600, 0.290);
+		colors[clr.SeparatorActive]        = ImVec4(0.702, 0.671, 0.600, 0.674);
+		colors[clr.ResizeGrip]             = ImVec4(0.26, 0.59, 0.98, 0.25);
+		colors[clr.ResizeGripHovered]      = ImVec4(0.26, 0.59, 0.98, 0.67);
+		colors[clr.ResizeGripActive]       = ImVec4(0.26, 0.59, 0.98, 0.95);
+		colors[clr.PlotLines]              = ImVec4(0.61, 0.61, 0.61, 1.00);
+		colors[clr.PlotLinesHovered]       = ImVec4(1.00, 0.43, 0.35, 1.00);
+		colors[clr.PlotHistogram]          = ImVec4(0.90, 0.70, 0.00, 1.00);
+		colors[clr.PlotHistogramHovered]   = ImVec4(1.00, 0.60, 0.00, 1.00);
+		colors[clr.TextSelectedBg]         = ImVec4(0.73, 0.73, 0.73, 0.35);
+		colors[clr.ModalWindowDimBg]       = ImVec4(0.80, 0.80, 0.80, 0.35);
+		colors[clr.DragDropTarget]         = ImVec4(1.00, 1.00, 0.00, 0.90);
+		colors[clr.NavHighlight]           = ImVec4(0.26, 0.59, 0.98, 1.00);
+		colors[clr.NavWindowingHighlight]  = ImVec4(1.00, 1.00, 1.00, 0.70);
+		colors[clr.NavWindowingDimBg]      = ImVec4(0.80, 0.80, 0.80, 0.20);
+		colors[clr.Tab]                = ImVec4(0.25, 0.25, 0.25, 1.00);
+		colors[clr.TabHovered]         = ImVec4(0.40, 0.40, 0.40, 1.00);
+		colors[clr.TabActive]          = ImVec4(0.33, 0.33, 0.33, 1.00);
+		colors[clr.TabUnfocused]       = ImVec4(0.25, 0.25, 0.25, 1.00);
+		colors[clr.TabUnfocusedActive] = ImVec4(0.33, 0.33, 0.33, 1.00);
+	end
 
-_logo ="\x89\x50\x4E\x47\x0D\x0A\x1A\x0A\x00\x00\x00\x0D\x49\x48\x44\x52\x00\x00\x01\x86\x00\x00\x00\x19\x08\x06\x00\x00\x00\x35\xC7\x89\xC7\x00\x00\x01\x26\x69\x43\x43\x50\x41\x64\x6F\x62\x65\x20\x52\x47\x42\x20\x28\x31\x39\x39\x38\x29\x00\x00\x28\xCF\x63\x60\x60\x32\x70\x74\x71\x72\x65\x12\x60\x60\xC8\xCD\x2B\x29\x0A\x72\x77\x52\x88\x88\x8C\x52\x60\x3F\xCF\xC0\xC6\xC0\xCC\x00\x06\x89\xC9\xC5\x05\x8E\x01\x01\x3E\x20\x76\x5E\x7E\x5E\x2A\x03\x06\xF8\x76\x8D\x81\x11\x44\x5F\xD6\x05\x99\xC5\x40\x1A\xE0\x4A\x2E\x28\x2A\x01\xD2\x7F\x80\xD8\x28\x25\xB5\x38\x99\x81\x81\xD1\x00\xC8\xCE\x2E\x2F\x29\x00\x8A\x33\xCE\x01\xB2\x45\x92\xB2\xC1\xEC\x0D\x20\x76\x51\x48\x90\x33\x90\x7D\x04\xC8\xE6\x4B\x87\xB0\xAF\x80\xD8\x49\x10\xF6\x13\x10\xBB\x08\xE8\x09\x20\xFB\x0B\x48\x7D\x3A\x98\xCD\xC4\x01\x36\x07\xC2\x96\x01\xB1\x4B\x52\x2B\x40\xF6\x32\x38\xE7\x17\x54\x16\x65\xA6\x67\x94\x28\x18\x5A\x5A\x5A\x2A\x38\xA6\xE4\x27\xA5\x2A\x04\x57\x16\x97\xA4\xE6\x16\x2B\x78\xE6\x25\xE7\x17\x15\xE4\x17\x25\x96\xA4\xA6\x00\xD5\x42\xDC\x07\x06\x82\x10\x85\xA0\x10\xD3\x00\x6A\xB4\xD0\x64\xA0\x32\x00\xC5\x03\x84\xF5\x39\x10\x1C\xBE\x8C\x62\x67\x10\x62\x08\x90\x5C\x5A\x54\x06\x65\x32\x32\x19\x13\xE6\x23\xCC\x98\x23\xC1\xC0\xE0\xBF\x94\x81\x81\xE5\x0F\x42\xCC\xA4\x97\x81\x61\x81\x0E\x03\x03\xFF\x54\x84\x98\x9A\x21\x03\x83\x80\x3E\x03\xC3\xBE\x39\x00\xC0\xC6\x4F\xFD\x19\x3A\x36\x5C\x00\x00\x00\x09\x70\x48\x59\x73\x00\x00\x0B\x13\x00\x00\x0B\x13\x01\x00\x9A\x9C\x18\x00\x00\x06\x6E\x69\x54\x58\x74\x58\x4D\x4C\x3A\x63\x6F\x6D\x2E\x61\x64\x6F\x62\x65\x2E\x78\x6D\x70\x00\x00\x00\x00\x00\x3C\x3F\x78\x70\x61\x63\x6B\x65\x74\x20\x62\x65\x67\x69\x6E\x3D\x22\xEF\xBB\xBF\x22\x20\x69\x64\x3D\x22\x57\x35\x4D\x30\x4D\x70\x43\x65\x68\x69\x48\x7A\x72\x65\x53\x7A\x4E\x54\x63\x7A\x6B\x63\x39\x64\x22\x3F\x3E\x20\x3C\x78\x3A\x78\x6D\x70\x6D\x65\x74\x61\x20\x78\x6D\x6C\x6E\x73\x3A\x78\x3D\x22\x61\x64\x6F\x62\x65\x3A\x6E\x73\x3A\x6D\x65\x74\x61\x2F\x22\x20\x78\x3A\x78\x6D\x70\x74\x6B\x3D\x22\x41\x64\x6F\x62\x65\x20\x58\x4D\x50\x20\x43\x6F\x72\x65\x20\x36\x2E\x30\x2D\x63\x30\x30\x32\x20\x37\x39\x2E\x31\x36\x34\x33\x35\x32\x2C\x20\x32\x30\x32\x30\x2F\x30\x31\x2F\x33\x30\x2D\x31\x35\x3A\x35\x30\x3A\x33\x38\x20\x20\x20\x20\x20\x20\x20\x20\x22\x3E\x20\x3C\x72\x64\x66\x3A\x52\x44\x46\x20\x78\x6D\x6C\x6E\x73\x3A\x72\x64\x66\x3D\x22\x68\x74\x74\x70\x3A\x2F\x2F\x77\x77\x77\x2E\x77\x33\x2E\x6F\x72\x67\x2F\x31\x39\x39\x39\x2F\x30\x32\x2F\x32\x32\x2D\x72\x64\x66\x2D\x73\x79\x6E\x74\x61\x78\x2D\x6E\x73\x23\x22\x3E\x20\x3C\x72\x64\x66\x3A\x44\x65\x73\x63\x72\x69\x70\x74\x69\x6F\x6E\x20\x72\x64\x66\x3A\x61\x62\x6F\x75\x74\x3D\x22\x22\x20\x78\x6D\x6C\x6E\x73\x3A\x78\x6D\x70\x3D\x22\x68\x74\x74\x70\x3A\x2F\x2F\x6E\x73\x2E\x61\x64\x6F\x62\x65\x2E\x63\x6F\x6D\x2F\x78\x61\x70\x2F\x31\x2E\x30\x2F\x22\x20\x78\x6D\x6C\x6E\x73\x3A\x78\x6D\x70\x4D\x4D\x3D\x22\x68\x74\x74\x70\x3A\x2F\x2F\x6E\x73\x2E\x61\x64\x6F\x62\x65\x2E\x63\x6F\x6D\x2F\x78\x61\x70\x2F\x31\x2E\x30\x2F\x6D\x6D\x2F\x22\x20\x78\x6D\x6C\x6E\x73\x3A\x73\x74\x45\x76\x74\x3D\x22\x68\x74\x74\x70\x3A\x2F\x2F\x6E\x73\x2E\x61\x64\x6F\x62\x65\x2E\x63\x6F\x6D\x2F\x78\x61\x70\x2F\x31\x2E\x30\x2F\x73\x54\x79\x70\x65\x2F\x52\x65\x73\x6F\x75\x72\x63\x65\x45\x76\x65\x6E\x74\x23\x22\x20\x78\x6D\x6C\x6E\x73\x3A\x70\x68\x6F\x74\x6F\x73\x68\x6F\x70\x3D\x22\x68\x74\x74\x70\x3A\x2F\x2F\x6E\x73\x2E\x61\x64\x6F\x62\x65\x2E\x63\x6F\x6D\x2F\x70\x68\x6F\x74\x6F\x73\x68\x6F\x70\x2F\x31\x2E\x30\x2F\x22\x20\x78\x6D\x6C\x6E\x73\x3A\x64\x63\x3D\x22\x68\x74\x74\x70\x3A\x2F\x2F\x70\x75\x72\x6C\x2E\x6F\x72\x67\x2F\x64\x63\x2F\x65\x6C\x65\x6D\x65\x6E\x74\x73\x2F\x31\x2E\x31\x2F\x22\x20\x78\x6D\x70\x3A\x43\x72\x65\x61\x74\x6F\x72\x54\x6F\x6F\x6C\x3D\x22\x41\x64\x6F\x62\x65\x20\x50\x68\x6F\x74\x6F\x73\x68\x6F\x70\x20\x32\x31\x2E\x31\x20\x28\x57\x69\x6E\x64\x6F\x77\x73\x29\x22\x20\x78\x6D\x70\x3A\x43\x72\x65\x61\x74\x65\x44\x61\x74\x65\x3D\x22\x32\x30\x32\x30\x2D\x31\x30\x2D\x32\x31\x54\x30\x33\x3A\x31\x38\x3A\x31\x39\x2B\x30\x33\x3A\x30\x30\x22\x20\x78\x6D\x70\x3A\x4D\x65\x74\x61\x64\x61\x74\x61\x44\x61\x74\x65\x3D\x22\x32\x30\x32\x30\x2D\x31\x30\x2D\x32\x31\x54\x30\x33\x3A\x31\x38\x3A\x31\x39\x2B\x30\x33\x3A\x30\x30\x22\x20\x78\x6D\x70\x3A\x4D\x6F\x64\x69\x66\x79\x44\x61\x74\x65\x3D\x22\x32\x30\x32\x30\x2D\x31\x30\x2D\x32\x31\x54\x30\x33\x3A\x31\x38\x3A\x31\x39\x2B\x30\x33\x3A\x30\x30\x22\x20\x78\x6D\x70\x4D\x4D\x3A\x49\x6E\x73\x74\x61\x6E\x63\x65\x49\x44\x3D\x22\x78\x6D\x70\x2E\x69\x69\x64\x3A\x63\x66\x63\x35\x66\x38\x63\x33\x2D\x37\x32\x31\x36\x2D\x63\x36\x34\x62\x2D\x39\x33\x37\x65\x2D\x65\x64\x30\x34\x38\x62\x63\x30\x35\x61\x61\x61\x22\x20\x78\x6D\x70\x4D\x4D\x3A\x44\x6F\x63\x75\x6D\x65\x6E\x74\x49\x44\x3D\x22\x61\x64\x6F\x62\x65\x3A\x64\x6F\x63\x69\x64\x3A\x70\x68\x6F\x74\x6F\x73\x68\x6F\x70\x3A\x39\x61\x34\x32\x35\x62\x39\x34\x2D\x61\x36\x62\x65\x2D\x61\x35\x34\x61\x2D\x62\x66\x36\x66\x2D\x32\x63\x32\x33\x33\x63\x31\x30\x64\x32\x39\x36\x22\x20\x78\x6D\x70\x4D\x4D\x3A\x4F\x72\x69\x67\x69\x6E\x61\x6C\x44\x6F\x63\x75\x6D\x65\x6E\x74\x49\x44\x3D\x22\x78\x6D\x70\x2E\x64\x69\x64\x3A\x34\x62\x36\x65\x36\x34\x65\x34\x2D\x65\x63\x38\x62\x2D\x37\x65\x34\x64\x2D\x61\x63\x66\x65\x2D\x65\x38\x31\x38\x66\x33\x34\x36\x65\x64\x61\x32\x22\x20\x70\x68\x6F\x74\x6F\x73\x68\x6F\x70\x3A\x43\x6F\x6C\x6F\x72\x4D\x6F\x64\x65\x3D\x22\x33\x22\x20\x64\x63\x3A\x66\x6F\x72\x6D\x61\x74\x3D\x22\x69\x6D\x61\x67\x65\x2F\x70\x6E\x67\x22\x3E\x20\x3C\x78\x6D\x70\x4D\x4D\x3A\x48\x69\x73\x74\x6F\x72\x79\x3E\x20\x3C\x72\x64\x66\x3A\x53\x65\x71\x3E\x20\x3C\x72\x64\x66\x3A\x6C\x69\x20\x73\x74\x45\x76\x74\x3A\x61\x63\x74\x69\x6F\x6E\x3D\x22\x63\x72\x65\x61\x74\x65\x64\x22\x20\x73\x74\x45\x76\x74\x3A\x69\x6E\x73\x74\x61\x6E\x63\x65\x49\x44\x3D\x22\x78\x6D\x70\x2E\x69\x69\x64\x3A\x34\x62\x36\x65\x36\x34\x65\x34\x2D\x65\x63\x38\x62\x2D\x37\x65\x34\x64\x2D\x61\x63\x66\x65\x2D\x65\x38\x31\x38\x66\x33\x34\x36\x65\x64\x61\x32\x22\x20\x73\x74\x45\x76\x74\x3A\x77\x68\x65\x6E\x3D\x22\x32\x30\x32\x30\x2D\x31\x30\x2D\x32\x31\x54\x30\x33\x3A\x31\x38\x3A\x31\x39\x2B\x30\x33\x3A\x30\x30\x22\x20\x73\x74\x45\x76\x74\x3A\x73\x6F\x66\x74\x77\x61\x72\x65\x41\x67\x65\x6E\x74\x3D\x22\x41\x64\x6F\x62\x65\x20\x50\x68\x6F\x74\x6F\x73\x68\x6F\x70\x20\x32\x31\x2E\x31\x20\x28\x57\x69\x6E\x64\x6F\x77\x73\x29\x22\x2F\x3E\x20\x3C\x72\x64\x66\x3A\x6C\x69\x20\x73\x74\x45\x76\x74\x3A\x61\x63\x74\x69\x6F\x6E\x3D\x22\x73\x61\x76\x65\x64\x22\x20\x73\x74\x45\x76\x74\x3A\x69\x6E\x73\x74\x61\x6E\x63\x65\x49\x44\x3D\x22\x78\x6D\x70\x2E\x69\x69\x64\x3A\x63\x66\x63\x35\x66\x38\x63\x33\x2D\x37\x32\x31\x36\x2D\x63\x36\x34\x62\x2D\x39\x33\x37\x65\x2D\x65\x64\x30\x34\x38\x62\x63\x30\x35\x61\x61\x61\x22\x20\x73\x74\x45\x76\x74\x3A\x77\x68\x65\x6E\x3D\x22\x32\x30\x32\x30\x2D\x31\x30\x2D\x32\x31\x54\x30\x33\x3A\x31\x38\x3A\x31\x39\x2B\x30\x33\x3A\x30\x30\x22\x20\x73\x74\x45\x76\x74\x3A\x73\x6F\x66\x74\x77\x61\x72\x65\x41\x67\x65\x6E\x74\x3D\x22\x41\x64\x6F\x62\x65\x20\x50\x68\x6F\x74\x6F\x73\x68\x6F\x70\x20\x32\x31\x2E\x31\x20\x28\x57\x69\x6E\x64\x6F\x77\x73\x29\x22\x20\x73\x74\x45\x76\x74\x3A\x63\x68\x61\x6E\x67\x65\x64\x3D\x22\x2F\x22\x2F\x3E\x20\x3C\x2F\x72\x64\x66\x3A\x53\x65\x71\x3E\x20\x3C\x2F\x78\x6D\x70\x4D\x4D\x3A\x48\x69\x73\x74\x6F\x72\x79\x3E\x20\x3C\x70\x68\x6F\x74\x6F\x73\x68\x6F\x70\x3A\x54\x65\x78\x74\x4C\x61\x79\x65\x72\x73\x3E\x20\x3C\x72\x64\x66\x3A\x42\x61\x67\x3E\x20\x3C\x72\x64\x66\x3A\x6C\x69\x20\x70\x68\x6F\x74\x6F\x73\x68\x6F\x70\x3A\x4C\x61\x79\x65\x72\x4E\x61\x6D\x65\x3D\x22\x50\x65\x72\x73\x6F\x6E\x61\x6C\x20\x53\x6B\x69\x6E\x20\x43\x68\x61\x6E\x67\x65\x72\x22\x20\x70\x68\x6F\x74\x6F\x73\x68\x6F\x70\x3A\x4C\x61\x79\x65\x72\x54\x65\x78\x74\x3D\x22\x50\x65\x72\x73\x6F\x6E\x61\x6C\x20\x53\x6B\x69\x6E\x20\x43\x68\x61\x6E\x67\x65\x72\x22\x2F\x3E\x20\x3C\x2F\x72\x64\x66\x3A\x42\x61\x67\x3E\x20\x3C\x2F\x70\x68\x6F\x74\x6F\x73\x68\x6F\x70\x3A\x54\x65\x78\x74\x4C\x61\x79\x65\x72\x73\x3E\x20\x3C\x2F\x72\x64\x66\x3A\x44\x65\x73\x63\x72\x69\x70\x74\x69\x6F\x6E\x3E\x20\x3C\x2F\x72\x64\x66\x3A\x52\x44\x46\x3E\x20\x3C\x2F\x78\x3A\x78\x6D\x70\x6D\x65\x74\x61\x3E\x20\x3C\x3F\x78\x70\x61\x63\x6B\x65\x74\x20\x65\x6E\x64\x3D\x22\x72\x22\x3F\x3E\xBB\xF2\x07\x5F\x00\x00\x07\x12\x49\x44\x41\x54\x78\xDA\xED\x5D\xED\x75\xAE\x20\x0C\xEE\x0A\xAE\xE0\x0A\xAE\xC0\x0A\xEF\x0A\xAE\xC0\x0A\xAE\xE0\x0A\xAE\xC0\x0A\xAE\xC0\x0A\xAC\xC0\x6D\x7B\xB0\xB5\x96\x84\x04\x83\xDA\x73\xC3\x39\xF9\xD3\x2A\x95\x87\x24\x0F\xF9\xD0\xBE\xC5\x18\xDF\x54\x54\x54\x54\x54\x54\x36\x51\x10\x54\x54\x54\x54\x54\x40\x62\xE8\xDF\xC5\x54\xC8\xF0\xA6\x43\xC7\x85\xE3\x5D\xE7\xBA\x8C\x1E\xF6\x8A\x4C\x15\x96\xBD\x62\xA9\xE3\xA0\x13\x3F\x88\xC1\xC6\x73\x63\x79\x97\x97\xC2\xAA\xA3\xA1\x03\x9B\xDF\x25\x10\xF4\xD0\xAA\x73\x43\x49\x75\x4C\x38\x61\x23\xA4\x6B\x46\x45\xED\x3F\x26\x86\xF4\x83\x35\x9E\x1F\x93\x42\xAB\x43\x58\x51\x6B\x0F\x2D\x1F\xFA\xEC\x34\xAA\xFD\xC2\xF1\x45\x20\xD6\xDC\xF0\x4A\x10\xFF\x37\x31\xB8\x28\x33\x8C\xC0\xA9\x66\x51\x83\xD6\x91\x4E\xB7\x67\x86\x57\x14\x3F\x71\x9C\x05\xEC\xFA\x93\x54\x14\xCD\xC7\x44\x7E\x4D\x7C\x24\x85\x18\x56\xA4\xB6\xF0\x71\xFA\x98\x80\x13\xC8\x94\xE6\x33\x12\x04\x53\x39\x8F\x2F\x85\xC2\x29\x3D\x61\x01\x42\xF4\x9C\xB4\xC4\x21\x44\xF7\x19\x83\x72\x69\xAE\x0E\xB8\xDF\x70\x89\x16\x39\x49\x1B\xE4\x39\x4D\x2D\xA1\x23\xF7\xBA\x86\x06\x90\xC3\x72\x4E\x58\x6F\xBA\x68\x91\x34\xD3\xB8\x9B\xCB\x51\xD6\x5D\x38\x20\x39\x2A\x16\xC8\x3C\x0E\x59\xAF\x38\xBE\x85\x88\x6B\x4D\xBF\xDF\xDB\xB5\x45\xB2\x07\x13\x17\xCF\xDA\xEB\x05\xF4\xB5\x39\xFE\xC9\xEE\x37\x1F\x12\x00\xBB\x9F\x12\xAE\x1D\x73\x7D\xB7\xF8\x48\x0A\x31\x38\x82\xD2\x99\x82\x71\x4C\x12\x91\xC7\xC9\x79\x66\xE0\x24\xCA\x09\xAB\x17\x28\x2D\xC1\x0C\xD1\x3F\xAE\xB3\x00\x96\x13\xB0\x79\x1D\xA2\x94\xC7\x61\x09\x7B\x36\x51\x30\x22\xDE\x0B\x3E\x9F\x00\x29\x0C\x15\xCE\x60\xBF\xAF\x9E\x30\x9F\x25\x3A\xD2\x90\x31\xA0\xDC\x75\x5D\x61\x7F\xD0\x3D\x92\xC6\x37\x1D\x7E\x20\xA7\x60\x08\xF7\x3A\xE8\x59\xB8\xFA\x77\xB5\xBE\xB6\xC6\x3F\xED\x3F\x37\x35\x17\x88\xEB\xBB\xCD\x47\x8A\x10\x03\xC0\xB2\x4E\x20\x3F\x7C\x5C\xF4\xD9\xE2\xF8\x70\x70\xE4\xB5\xA1\x74\x27\x94\xEA\x98\x19\x27\xBB\x15\x51\x4E\x76\x1A\x0F\x38\x49\x05\x62\x64\x64\x2F\x8C\x16\x0C\xB6\x8F\x04\x87\x30\x72\xF1\x02\x8C\x6B\x05\x0E\x04\xBF\x9E\x8F\x78\x02\x8D\x50\x24\x2B\x8D\x2F\x90\x42\x62\x91\xCD\x4E\x5F\xCC\x59\xFD\xBB\x41\x5F\xC5\xF1\x4F\xFA\x55\x9B\x76\xB7\x0C\xBB\xBF\xC5\x47\x4A\x45\x0C\x96\x49\x0C\x2B\xA1\x05\xF6\x45\x58\x34\x36\xCF\x84\x6D\x48\x26\x4C\xF6\xE9\x9E\x63\x38\xBD\x1C\x4E\x04\x36\x13\x29\x94\xC2\xF3\x11\xC9\xEF\x5A\x66\xC8\xDF\x09\x18\xA6\xE1\x90\xD5\x03\x89\x61\x4B\x25\xD9\x9A\x76\x69\x24\x14\xEF\x80\xF4\x89\xE3\xA4\xFF\x18\x8E\x09\x22\x2E\x69\x62\x08\x67\x6B\x80\x9B\x1E\x4B\x38\xFA\x1B\xF4\x55\x1C\x7F\xA4\xA3\x6B\x9F\xE2\xCC\xA5\xE4\x02\x60\xC3\x8F\xF2\x91\x14\x62\xF0\xE9\x8F\x41\xE2\x4A\x0E\xAF\x56\xD1\x53\xD8\xDF\xD5\xCE\x93\x31\x72\x0B\x28\x0B\x7A\x7A\x4A\x0E\xC3\x03\xD1\x82\xA7\x86\xA9\x69\x3D\x39\x23\xED\x19\x8C\xBF\x66\x9E\x41\x2A\xEF\xFA\xEB\x79\x1E\x40\x0C\x1D\x33\x9A\xFB\xCA\xE7\x72\x1C\x53\x92\xC0\x75\x3C\x02\xC4\x10\x09\xE9\x29\x77\x02\xBF\x5C\xEA\x6C\x15\xDE\xA3\xD6\xC4\x70\x56\x5F\x45\xF1\x07\x88\x6A\xC5\x0E\x28\xBB\x7B\x66\x49\x9B\x6A\xE5\x23\x5B\x75\x25\x85\x9A\x87\x4D\x4C\xEB\x24\x1C\x52\x72\x28\x81\x48\x0C\x1B\xD3\xBF\x90\xA2\x59\x7F\xDC\x78\x6A\xBE\x9A\xA0\x54\x96\x19\x0A\xAE\xB5\x86\x86\x9C\xC0\x39\xCE\xF0\x32\x62\x38\xD9\x4D\x13\x72\x04\x01\xEC\x3D\x39\xD5\xD0\x80\x18\xE2\xFE\x39\x85\x89\xC1\x60\xC5\xE3\x46\xC4\x60\x0B\x27\xDD\xAB\xF5\x55\x14\xFF\x4C\xB4\x10\x28\x69\xB9\xB4\x96\xEE\x8C\x4D\x5D\xE5\x23\x5B\x10\x83\xCF\x38\x50\x56\xDE\x8B\xB1\xE8\xED\x84\x98\x93\x52\x8D\xC1\x33\x4E\xA0\x5B\x78\xD8\x71\x0A\x8F\x0C\x96\x5E\x0A\x6B\x2C\x15\x8A\x38\x86\xE6\x32\x4E\xD1\x32\xE7\xB8\x9A\x18\xBA\x58\x7E\x19\x8B\x64\xF4\x0C\x47\x31\xD7\x3A\x5E\x82\x63\x0A\xC0\xCF\x86\x8B\x88\xC1\x36\x26\x86\xEA\x1C\x79\x23\x7D\x15\xC5\x3F\x73\xFF\x04\x3C\xF7\x22\xD4\x35\x76\xB9\x8F\x94\x22\x86\xAF\x96\x27\x62\xFE\x4C\x6A\xD1\x9C\xE1\x04\xE6\xF2\x07\x72\xA9\x0D\xFF\x2C\xA3\x1E\xE3\x90\xE2\xF6\xCC\x21\x06\xA0\x3B\xA5\x07\x4E\x0E\xEE\x29\xC4\x70\x88\xD0\xA6\xC8\x7F\x09\xD3\x57\x3A\x32\xD3\x88\x18\x5E\xC0\x1A\x42\x5A\x63\x6B\x62\x58\xFE\x02\x31\x08\xEA\xAB\x28\xFE\x94\xE7\x27\xFA\x51\xFB\x54\x1F\x19\xA5\xBA\x92\x6E\x62\x43\xAA\x33\xB7\x92\xAD\x66\x1B\xF9\xE5\x0A\x3D\x44\x3C\x26\x0E\x31\x14\x3A\x9F\x66\x86\xA1\xCD\x48\xD4\x61\x19\xF3\xDC\x42\x0C\x00\x51\xEC\x8B\x7C\x33\x12\x09\x0E\x15\x8E\x2C\x94\x0A\xDB\x95\xC4\x60\x90\x42\x77\xC8\x44\x47\x67\x88\xA1\x2B\xA5\x7A\x19\xF3\x0C\x17\x13\x83\x94\xBE\x8A\xE2\x2F\x44\x0C\xCB\x93\x7D\xE4\x5D\xC4\x00\x55\xCA\x67\xE6\xA2\x8F\x85\xF1\xF5\x44\xEE\xCF\xEE\xBA\x90\x5C\x61\x63\x47\xC4\x59\x53\xDA\xE7\x3C\x23\x95\x54\xF3\x3E\x88\x21\x9E\xBE\xD6\xDD\x5A\xD7\x52\x94\x75\x63\x2A\xC9\x70\x3A\x69\x00\x9C\x4C\xC1\x91\xCD\x11\x6E\x53\xED\xA4\x89\x61\xB7\x27\x94\x83\xC9\xD9\xAE\xA4\xF5\x6C\x9D\x21\x7E\xBF\x3C\xD8\x5F\x51\x7C\x16\xD6\x57\x51\xFC\x19\xA9\xA4\x80\xA4\x6E\xEC\x93\x7D\xE4\x5D\xC4\xE0\x5A\xCC\x03\x74\xFD\x2C\xC8\x7C\x4B\xA4\xBD\xE0\x03\x15\x68\x7A\x6E\x98\x0E\x30\xBA\x65\xAC\x71\xAE\x24\x86\xDA\x02\xAE\x79\x00\x31\xB8\x9D\xB1\x50\x88\x77\x64\x12\x83\x2D\xB4\x21\xBA\x16\xC4\x50\xE8\x54\x93\x24\x86\xB1\x94\xCA\x60\xE8\xAC\xBB\x88\x18\x24\xF5\x55\x14\x7F\xA0\xF8\x3C\x64\x30\x37\xC8\x73\xD8\x27\xFB\xC8\x47\x13\x43\x4A\x11\x4C\x9C\x79\x00\x23\xB0\x88\x41\xFB\x88\xB7\x36\x0E\x85\xEE\xA6\x5C\x64\xB1\x30\x6A\x2D\xEC\x0E\x2E\x82\xD1\x18\xC2\xE9\x0B\x2A\x48\x85\x52\x7A\xAC\x66\x3F\xD3\x3D\x53\x85\xEE\xF4\xC0\xE9\xFE\x05\xA4\x3B\xA0\xF4\x60\x47\x74\x14\x50\x8A\x61\x6E\x41\x0C\x44\xE7\x24\x61\x83\x50\x5D\xC6\x21\x58\x8E\x91\xD0\x8E\x2D\x4D\x0C\x0D\xF4\x55\x14\xFF\x08\x77\x4A\x8D\x8C\x03\x84\x7D\xB2\x8F\xBC\x8B\x18\x4A\xEF\x46\xD8\x9D\x81\x3B\x2E\x78\x44\x46\x9F\x81\xEA\xFD\x14\xCB\xEF\x68\x0C\x04\xA5\xDA\x72\x95\xA5\xDC\x77\x55\x0F\x7B\x81\x1C\x0C\x35\x57\x4B\x4C\xC3\x8C\x02\xFB\x19\x6A\x74\x89\x40\x82\x5B\x7A\x01\xEB\x32\x9B\x84\x1C\xC5\xD8\x82\x18\x08\xCE\x49\xC2\x06\x29\x69\x13\x47\xC0\xF2\x53\xB7\x1B\x13\x83\xB4\xBE\x8A\xE3\x8F\xE8\xA5\xDF\x75\x4E\x6D\xA9\x69\x0F\xF8\x07\xF3\x54\x1F\xF9\xC8\xE2\x33\xB7\x30\x4B\x2C\xB8\xAD\x85\xDF\x53\xC7\xCC\x54\xAA\x58\xAA\x55\xD4\x9E\x1C\x10\xE5\x34\x85\xD3\xD7\xC0\x3C\xA1\x7B\xA1\xFD\xAC\x21\x86\x58\x89\xED\xDE\xD9\x75\x15\x8E\xE2\x45\x24\x5D\x11\x62\x28\xE8\x91\x48\xAA\x0E\x89\x86\x38\x58\xBE\x0A\x29\x92\x53\xC4\xD0\x48\x5F\x9B\xE0\x1F\xCF\x7D\xAD\xD6\x47\xB9\x4F\x59\xB4\xF0\x91\xBF\xFE\x83\x5B\xE0\x84\x48\x44\x65\x5C\xCE\x2E\x1A\x98\x27\x20\x85\x2B\x0F\xA4\x78\xFA\xF8\xFD\x45\xD5\x39\x0A\x7C\xF8\x6E\xF7\x37\x67\x86\x81\x19\x22\x56\x1E\xCB\xAB\x03\x51\xCD\x9C\xE6\xEA\x01\xEC\x4D\x61\x1D\x1E\x99\xF3\xCC\x7E\x9E\xE9\xAE\x19\x23\xAF\x95\xDA\x17\x52\x88\xBF\xD6\x46\xC4\x36\xA4\x67\xD9\xB0\x98\x0B\x8E\x8E\xF5\x1E\x01\x92\xA6\x30\x6F\x42\x03\x49\x11\xB1\xF4\x95\x8B\x67\xE9\xFA\x46\xFA\xDA\x14\xFF\x44\x94\x1C\x2C\x73\x5F\x32\x7D\xA2\x8F\xFC\x41\x0C\x23\x94\xCB\x3B\xD9\x52\xE8\x2A\x25\xEC\x16\x0D\xCD\x33\x21\x4E\x24\x27\x23\xD2\x95\x34\x67\xAE\xB7\x11\xF8\x5C\x2E\xA2\xA8\xB9\xB9\xB6\xB4\xD2\x50\x81\xD5\x58\x08\xA5\x73\xF7\x0C\x08\x0E\x13\xC1\x01\x43\x73\x0E\x67\xF7\x52\x20\x25\x32\xEE\x52\x7D\x39\x8C\x4D\x0D\x5E\x00\x31\xD4\x60\x31\x95\xFE\x5E\x85\x0E\x88\xFF\xF3\xAB\xF8\xDD\xB3\x9F\xD3\xFB\x2D\x1D\x52\xFA\xDC\x04\x19\xCF\x9B\xF4\xF5\x12\xFC\x77\x3E\x64\x01\x74\xF2\x85\x90\xE5\xE3\x7C\xE4\xAF\x54\xD2\x93\x46\xCC\x7C\x86\x42\xC7\xDF\x1C\xBA\x97\x3A\x74\xFC\x1D\xBB\x3A\x46\x0C\x2A\x2A\x2A\x2A\x2A\x2A\x4A\x0C\x2A\x2A\x2A\x2A\x2A\x3F\xE5\x1F\xE9\x56\xBF\x6D\xDC\xA8\x24\x96\x00\x00\x00\x00\x49\x45\x4E\x44\xAE\x42\x60\x82"
+	function grey_theme() -- by Lemonager
+	 imgui.SwitchContext()
+	   local style = imgui.GetStyle()
+	   local colors = style.Colors
+	   local clr = imgui.Col
+	   local ImVec4 = imgui.ImVec4
+	   local ImVec2 = imgui.ImVec2
 
-function imgui.ButtonDisabled(...)
-    imgui.PushStyleColor(imgui.Col.Button, imgui.ImVec4(0.10, 0.10, 0.10, 1.00/2) )
-    imgui.PushStyleColor(imgui.Col.ButtonHovered, imgui.ImVec4(0.10, 0.10, 0.10, 1.00/2))
-    imgui.PushStyleColor(imgui.Col.ButtonActive, imgui.ImVec4(0.10, 0.10, 0.10, 1.00/2))
-    imgui.PushStyleColor(imgui.Col.Text, imgui.GetStyle().Colors[imgui.Col.TextDisabled])
-		local result = imgui.Button(...)
-    imgui.PopStyleColor(4)
-    return result
-end
+		style.PopupRounding = 3;
+		style.WindowBorderSize = 1;
+		style.ChildBorderSize  = 1;
+		style.PopupBorderSize  = 1;
+		style.FrameBorderSize  = 1; 
 
-function imgui.CenterText(text) -- by https://www.blast.hk/threads/13380/post-291217
-    local width = imgui.GetWindowWidth()
-    local style = imgui.GetStyle()
-    local render_text = function(text_)
-        for w in text_:gmatch('[^\r\n]+') do
-            local textsize = w:gsub('{.-}', '')
-            local text_width = imgui.CalcTextSize(textsize)
-            imgui.SetCursorPosX( width / 2 - text_width .x / 2 )
-            local text, colors_, m = {}, {}, 1
-            w = w:gsub('{(......)}', '{%1FF}')
-            while w:find('{........}') do
-                local n, k = w:find('{........}')
-                w = w:sub(1, n - 1) .. w:sub(k + 1, #w)
-            end
-            if text[0] then
-                for i = 0, #text do
-                    imgui.TextColored(colors_[i] or colors[1], (text[i]))
-                    imgui.SameLine(nil, 0)
-                end
-                imgui.NewLine()
-            else
-                imgui.Text(w)
-            end
-        end
-    end
-    render_text(text)
-end
+		style.WindowTitleAlign = imgui.ImVec2(0.5, 0.5)
+		style.ChildRounding     = 3;
+		style.WindowPadding = ImVec2(15, 15)
+		style.WindowRounding = 15.0
+		style.FramePadding = ImVec2(5, 5)
+		style.ItemSpacing = ImVec2(12, 8)
+		style.ItemInnerSpacing = ImVec2(8, 6)
+		style.IndentSpacing = 25.0
+		style.ScrollbarSize = 8.0
+		style.ScrollbarRounding = 15.0
+		style.GrabMinSize = 15.0
+		style.GrabRounding = 7.0
+		style.FrameRounding = 6.0
+	  
+		  colors[clr.Text] = ImVec4(0.95, 0.96, 0.98, 1.00)
+		  colors[clr.TextDisabled] = ImVec4(0.36, 0.42, 0.47, 1.00)
+		  colors[clr.WindowBg] = ImVec4(0.11, 0.15, 0.17, 1.00)
+		  colors[clr.PopupBg] = ImVec4(0.08, 0.08, 0.08, 0.94)
+		  colors[clr.Border] = ImVec4(0.43, 0.43, 0.50, 0.50)
+		  colors[clr.BorderShadow] = ImVec4(0.00, 0.00, 0.00, 0.00)
+		  colors[clr.FrameBg] = ImVec4(0.20, 0.25, 0.29, 1.00)
+		  colors[clr.FrameBgHovered] = ImVec4(0.12, 0.20, 0.28, 1.00)
+		  colors[clr.FrameBgActive] = ImVec4(0.09, 0.12, 0.14, 1.00)
+		  colors[clr.TitleBg] = ImVec4(0.09, 0.12, 0.14, 0.65)
+		  colors[clr.TitleBgCollapsed] = ImVec4(0.00, 0.00, 0.00, 0.51)
+		  colors[clr.TitleBgActive] = ImVec4(0.08, 0.10, 0.12, 1.00)
+		  colors[clr.MenuBarBg] = ImVec4(0.15, 0.18, 0.22, 1.00)
+		  colors[clr.ScrollbarBg] = ImVec4(0.02, 0.02, 0.02, 0.39)
+		  colors[clr.ScrollbarGrab] = ImVec4(0.20, 0.25, 0.29, 1.00)
+		  colors[clr.ScrollbarGrabHovered] = ImVec4(0.18, 0.22, 0.25, 1.00)
+		  colors[clr.ScrollbarGrabActive] = ImVec4(0.09, 0.21, 0.31, 1.00)
+		  colors[clr.CheckMark] = ImVec4(0.28, 0.56, 1.00, 1.00)
+		  colors[clr.SliderGrab] = ImVec4(0.28, 0.56, 1.00, 1.00)
+		  colors[clr.SliderGrabActive] = ImVec4(0.37, 0.61, 1.00, 1.00)
+		  colors[clr.Button] = ImVec4(0.20, 0.25, 0.29, 1.00)
+		  colors[clr.ButtonHovered] = ImVec4(0.28, 0.56, 1.00, 1.00)
+		  colors[clr.ButtonActive] = ImVec4(0.06, 0.53, 0.98, 1.00)
+		  colors[clr.Header] = ImVec4(0.20, 0.25, 0.29, 0.55)
+		  colors[clr.HeaderHovered] = ImVec4(0.26, 0.59, 0.98, 0.80)
+		  colors[clr.HeaderActive] = ImVec4(0.26, 0.59, 0.98, 1.00)
+		  colors[clr.ResizeGrip] = ImVec4(0.26, 0.59, 0.98, 0.25)
+		  colors[clr.ResizeGripHovered] = ImVec4(0.26, 0.59, 0.98, 0.67)
+		  colors[clr.ResizeGripActive] = ImVec4(0.06, 0.05, 0.07, 1.00)
+		  colors[clr.PlotLines] = ImVec4(0.61, 0.61, 0.61, 1.00)
+		  colors[clr.PlotLinesHovered] = ImVec4(1.00, 0.43, 0.35, 1.00)
+		  colors[clr.PlotHistogram] = ImVec4(0.90, 0.70, 0.00, 1.00)
+		  colors[clr.PlotHistogramHovered] = ImVec4(1.00, 0.60, 0.00, 1.00)
+		  colors[clr.TextSelectedBg] = ImVec4(0.25, 1.00, 0.00, 0.43)
+	end
 
-function imgui.Linkk(link)
-    if status_hovered then
-        local p = imgui.GetCursorScreenPos()
-        imgui.TextColored(imgui.ImVec4(0, 0.5, 1, 1), link)
-        imgui.GetWindowDrawList():AddLine(imgui.ImVec2(p.x, p.y + imgui.CalcTextSize(link).y), imgui.ImVec2(p.x + imgui.CalcTextSize(link).x, p.y + imgui.CalcTextSize(link).y), imgui.GetColorU32(imgui.ImVec4(0, 0.5, 1, 1)))
-    else
-        imgui.TextColored(imgui.ImVec4(0, 0.3, 0.8, 1), link)
-    end
-    if imgui.IsItemClicked() then os.execute('explorer '..link)
-    elseif imgui.IsItemHovered() then
-        status_hovered = true else status_hovered = false
-    end
-end
+	function Dark_red_theme() -- by nuomi
+		imgui.SwitchContext()
+		local style = imgui.GetStyle()
+		local colors = style.Colors
+		local clr = imgui.Col
+		local ImVec4 = imgui.ImVec4
+		local ImVec2 = imgui.ImVec2
+		
+		style.PopupRounding = 3;
+		style.WindowBorderSize = 1;
+		style.ChildBorderSize  = 1;
+		style.PopupBorderSize  = 1;
+		style.FrameBorderSize  = 1; 
+		style.WindowTitleAlign = imgui.ImVec2(0.5, 0.5)
+		style.ChildRounding     = 3;
+		style.WindowPadding = ImVec2(15, 15)
+		style.WindowRounding = 15.0
+		style.FramePadding = ImVec2(5, 5)
+		style.ItemSpacing = ImVec2(12, 8)
+		style.ItemInnerSpacing = ImVec2(8, 6)
+		style.IndentSpacing = 25.0
+		style.ScrollbarSize = 8.0
+		style.ScrollbarRounding = 15.0
+		style.GrabMinSize = 15.0
+		style.GrabRounding = 7.0
+		style.FrameRounding = 6.0
+
+		colors[clr.Text]                   = ImVec4(0.95, 0.96, 0.98, 1.00);
+		colors[clr.TextDisabled]           = ImVec4(0.29, 0.29, 0.29, 1.00);
+		colors[clr.WindowBg]               = ImVec4(0.14, 0.14, 0.14, 1.00);
+		colors[clr.PopupBg]                = ImVec4(0.08, 0.08, 0.08, 0.94);
+		colors[clr.Border]                 = ImVec4(0.14, 0.14, 0.14, 1.00);
+		colors[clr.BorderShadow]           = ImVec4(1.00, 1.00, 1.00, 0.10);
+		colors[clr.FrameBg]                = ImVec4(0.22, 0.22, 0.22, 1.00);
+		colors[clr.FrameBgHovered]         = ImVec4(0.18, 0.18, 0.18, 1.00);
+		colors[clr.FrameBgActive]          = ImVec4(0.09, 0.12, 0.14, 1.00);
+		colors[clr.TitleBg]                = ImVec4(0.14, 0.14, 0.14, 0.81);
+		colors[clr.TitleBgActive]          = ImVec4(0.14, 0.14, 0.14, 1.00);
+		colors[clr.TitleBgCollapsed]       = ImVec4(0.00, 0.00, 0.00, 0.51);
+		colors[clr.MenuBarBg]              = ImVec4(0.20, 0.20, 0.20, 1.00);
+		colors[clr.ScrollbarBg]            = ImVec4(0.02, 0.02, 0.02, 0.39);
+		colors[clr.ScrollbarGrab]          = ImVec4(0.36, 0.36, 0.36, 1.00);
+		colors[clr.ScrollbarGrabHovered]   = ImVec4(0.18, 0.22, 0.25, 1.00);
+		colors[clr.ScrollbarGrabActive]    = ImVec4(0.24, 0.24, 0.24, 1.00);
+		colors[clr.CheckMark]              = ImVec4(1.00, 0.28, 0.28, 1.00);
+		colors[clr.SliderGrab]             = ImVec4(1.00, 0.28, 0.28, 1.00);
+		colors[clr.SliderGrabActive]       = ImVec4(1.00, 0.28, 0.28, 1.00);
+		colors[clr.Button]                 = ImVec4(1.00, 0.28, 0.28, 1.00);
+		colors[clr.ButtonHovered]          = ImVec4(1.00, 0.39, 0.39, 1.00);
+		colors[clr.ButtonActive]           = ImVec4(1.00, 0.21, 0.21, 1.00);
+		colors[clr.Header]                 = ImVec4(1.00, 0.28, 0.28, 1.00);
+		colors[clr.HeaderHovered]          = ImVec4(1.00, 0.39, 0.39, 1.00);
+		colors[clr.HeaderActive]           = ImVec4(1.00, 0.21, 0.21, 1.00);
+		colors[clr.ResizeGrip]             = ImVec4(1.00, 0.28, 0.28, 1.00);
+		colors[clr.ResizeGripHovered]      = ImVec4(1.00, 0.39, 0.39, 1.00);
+		colors[clr.ResizeGripActive]       = ImVec4(1.00, 0.19, 0.19, 1.00);
+		colors[clr.PlotLines]              = ImVec4(0.61, 0.61, 0.61, 1.00);
+		colors[clr.PlotLinesHovered]       = ImVec4(1.00, 0.43, 0.35, 1.00);
+		colors[clr.PlotHistogram]          = ImVec4(1.00, 0.21, 0.21, 1.00);
+		colors[clr.PlotHistogramHovered]   = ImVec4(1.00, 0.18, 0.18, 1.00);
+		colors[clr.TextSelectedBg]         = ImVec4(1.00, 0.32, 0.32, 1.00);
+	end
+
+	function darkgreentheme()
+	 imgui.SwitchContext()
+	   local style = imgui.GetStyle()
+	   local colors = style.Colors
+	   local clr = imgui.Col
+	   local ImVec4 = imgui.ImVec4
+	   local ImVec2 = imgui.ImVec2
+
+		style.PopupRounding = 3;
+		style.WindowBorderSize = 1;
+		style.ChildBorderSize  = 1;
+		style.PopupBorderSize  = 1;
+		style.FrameBorderSize  = 1; 
+		style.WindowTitleAlign = imgui.ImVec2(0.5, 0.5)
+		style.ChildRounding     = 3;
+		style.WindowPadding = ImVec2(15, 15)
+		style.WindowRounding = 15.0
+		style.FramePadding = ImVec2(5, 5)
+		style.ItemSpacing = ImVec2(12, 8)
+		style.ItemInnerSpacing = ImVec2(8, 6)
+		style.IndentSpacing = 25.0
+		style.ScrollbarSize = 8.0
+		style.ScrollbarRounding = 15.0
+		style.GrabMinSize = 15.0
+		style.GrabRounding = 7.0
+		style.FrameRounding = 6.0
+		
+		colors[clr.Text]                   = ImVec4(0.90, 0.90, 0.90, 1.00)
+		colors[clr.TextDisabled]           = ImVec4(0.60, 0.60, 0.60, 1.00)
+		colors[clr.WindowBg]               = ImVec4(0.08, 0.08, 0.08, 1.00)
+		colors[clr.PopupBg]                = ImVec4(0.08, 0.08, 0.08, 1.00)
+		colors[clr.Border]                 = ImVec4(0.70, 0.70, 0.70, 0.40)
+		colors[clr.BorderShadow]           = ImVec4(0.00, 0.00, 0.00, 0.00)
+		colors[clr.FrameBg]                = ImVec4(0.15, 0.15, 0.15, 1.00)
+		colors[clr.FrameBgHovered]         = ImVec4(0.19, 0.19, 0.19, 0.71)
+		colors[clr.FrameBgActive]          = ImVec4(0.34, 0.34, 0.34, 0.79)
+		colors[clr.TitleBg]                = ImVec4(0.00, 0.69, 0.33, 0.80)
+		colors[clr.TitleBgActive]          = ImVec4(0.00, 0.74, 0.36, 1.00)
+		colors[clr.TitleBgCollapsed]       = ImVec4(0.00, 0.69, 0.33, 0.50)
+		colors[clr.MenuBarBg]              = ImVec4(0.00, 0.80, 0.38, 1.00)
+		colors[clr.ScrollbarBg]            = ImVec4(0.16, 0.16, 0.16, 1.00)
+		colors[clr.ScrollbarGrab]          = ImVec4(0.00, 0.69, 0.33, 1.00)
+		colors[clr.ScrollbarGrabHovered]   = ImVec4(0.00, 0.82, 0.39, 1.00)
+		colors[clr.ScrollbarGrabActive]    = ImVec4(0.00, 1.00, 0.48, 1.00)
+		colors[clr.CheckMark]              = ImVec4(0.00, 0.69, 0.33, 1.00)
+		colors[clr.SliderGrab]             = ImVec4(0.00, 0.69, 0.33, 1.00)
+		colors[clr.SliderGrabActive]       = ImVec4(0.00, 0.77, 0.37, 1.00)
+		colors[clr.Button]                 = ImVec4(0.00, 0.69, 0.33, 1.00)
+		colors[clr.ButtonHovered]          = ImVec4(0.00, 0.82, 0.39, 1.00)
+		colors[clr.ButtonActive]           = ImVec4(0.00, 0.87, 0.42, 1.00)
+		colors[clr.Header]                 = ImVec4(0.00, 0.69, 0.33, 1.00)
+		colors[clr.HeaderHovered]          = ImVec4(0.00, 0.76, 0.37, 0.57)
+		colors[clr.HeaderActive]           = ImVec4(0.00, 0.88, 0.42, 0.89)
+		colors[clr.Separator]              = ImVec4(1.00, 1.00, 1.00, 0.40)
+		colors[clr.SeparatorHovered]       = ImVec4(1.00, 1.00, 1.00, 0.60)
+		colors[clr.SeparatorActive]        = ImVec4(1.00, 1.00, 1.00, 0.80)
+		colors[clr.ResizeGrip]             = ImVec4(0.00, 0.69, 0.33, 1.00)
+		colors[clr.ResizeGripHovered]      = ImVec4(0.00, 0.76, 0.37, 1.00)
+		colors[clr.ResizeGripActive]       = ImVec4(0.00, 0.86, 0.41, 1.00)
+		colors[clr.PlotLines]              = ImVec4(0.00, 0.69, 0.33, 1.00)
+		colors[clr.PlotLinesHovered]       = ImVec4(0.00, 0.74, 0.36, 1.00)
+		colors[clr.PlotHistogram]          = ImVec4(0.00, 0.69, 0.33, 1.00)
+		colors[clr.PlotHistogramHovered]   = ImVec4(0.00, 0.80, 0.38, 1.00)
+		colors[clr.TextSelectedBg]         = ImVec4(0.00, 0.69, 0.33, 0.72)
+	end
+
+	function red_theme()
+	 imgui.SwitchContext()
+	   local style = imgui.GetStyle()
+	   local colors = style.Colors
+	   local clr = imgui.Col
+	   local ImVec4 = imgui.ImVec4
+	   local ImVec2 = imgui.ImVec2
+
+		style.PopupRounding = 3;
+		style.WindowBorderSize = 1;
+		style.ChildBorderSize  = 1;
+		style.PopupBorderSize  = 1;
+		style.FrameBorderSize  = 1; 
+		style.WindowTitleAlign = imgui.ImVec2(0.5, 0.5)
+		style.ChildRounding     = 3;
+		style.WindowPadding = ImVec2(15, 15)
+		style.WindowRounding = 15.0
+		style.FramePadding = ImVec2(5, 5)
+		style.ItemSpacing = ImVec2(12, 8)
+		style.ItemInnerSpacing = ImVec2(8, 6)
+		style.IndentSpacing = 25.0
+		style.ScrollbarSize = 8.0
+		style.ScrollbarRounding = 15.0
+		style.GrabMinSize = 15.0
+		style.GrabRounding = 7.0
+		style.FrameRounding = 6.0
+		
+		colors[clr.Text] = ImVec4(1.00, 1.00, 1.00, 0.78)
+		colors[clr.TextDisabled] = ImVec4(1.00, 1.00, 1.00, 1.00)
+		colors[clr.WindowBg] = ImVec4(0.11, 0.15, 0.17, 1.00)
+		colors[clr.PopupBg] = ImVec4(0.08, 0.08, 0.08, 0.94)
+		colors[clr.Border] = ImVec4(0.43, 0.43, 0.50, 0.50)
+		colors[clr.BorderShadow] = ImVec4(0.00, 0.00, 0.00, 0.00)
+		colors[clr.FrameBg] = ImVec4(0.20, 0.25, 0.29, 1.00)
+		colors[clr.FrameBgHovered] = ImVec4(0.12, 0.20, 0.28, 1.00)
+		colors[clr.FrameBgActive] = ImVec4(0.09, 0.12, 0.14, 1.00)
+		colors[clr.TitleBg] = ImVec4(0.53, 0.20, 0.16, 0.65)
+		colors[clr.TitleBgActive] = ImVec4(0.56, 0.14, 0.14, 1.00)
+		colors[clr.TitleBgCollapsed] = ImVec4(0.00, 0.00, 0.00, 0.51)
+		colors[clr.MenuBarBg]= ImVec4(0.15, 0.18, 0.22, 1.00)
+		colors[clr.ScrollbarBg] = ImVec4(0.02, 0.02, 0.02, 0.39)
+		colors[clr.ScrollbarGrab] = ImVec4(0.20, 0.25, 0.29, 1.00)
+		colors[clr.ScrollbarGrabHovered] = ImVec4(0.18, 0.22, 0.25, 1.00)
+		colors[clr.ScrollbarGrabActive] = ImVec4(0.09, 0.21, 0.31, 1.00)
+		colors[clr.CheckMark] = ImVec4(1.00, 0.28, 0.28, 1.00)
+		colors[clr.SliderGrab] = ImVec4(0.64, 0.14, 0.14, 1.00)
+		colors[clr.SliderGrabActive] = ImVec4(1.00, 0.37, 0.37, 1.00)
+		colors[clr.Button] = ImVec4(0.59, 0.13, 0.13, 1.00)
+		colors[clr.ButtonHovered] = ImVec4(0.69, 0.15, 0.15, 1.00)
+		colors[clr.ButtonActive] = ImVec4(0.67, 0.13, 0.07, 1.00)
+		colors[clr.Header]   = ImVec4(0.20, 0.25, 0.29, 0.55)
+		colors[clr.HeaderHovered] = ImVec4(0.98, 0.38, 0.26, 0.80)
+		colors[clr.HeaderActive] = ImVec4(0.98, 0.26, 0.26, 1.00)
+		colors[clr.Separator]= ImVec4(0.50, 0.50, 0.50, 1.00)
+		colors[clr.SeparatorHovered] = ImVec4(0.60, 0.60, 0.70, 1.00)
+		colors[clr.SeparatorActive] = ImVec4(0.70, 0.70, 0.90, 1.00)
+		colors[clr.ResizeGrip] = ImVec4(0.26, 0.59, 0.98, 0.25)
+		colors[clr.ResizeGripHovered] = ImVec4(0.26, 0.59, 0.98, 0.67)
+		colors[clr.ResizeGripActive] = ImVec4(0.06, 0.05, 0.07, 1.00)
+		colors[clr.PlotLines] = ImVec4(0.61, 0.61, 0.61, 1.00)
+		colors[clr.PlotLinesHovered] = ImVec4(1.00, 0.43, 0.35, 1.00)
+		colors[clr.PlotHistogram] = ImVec4(0.90, 0.70, 0.00, 1.00)
+		colors[clr.PlotHistogramHovered] = ImVec4(1.00, 0.60, 0.00, 1.00)
+		colors[clr.TextSelectedBg] = ImVec4(0.25, 1.00, 0.00, 0.43)
+	end
+
+	function Purple_theme() -- by Cosmo
+		imgui.SwitchContext()
+	   local style = imgui.GetStyle()
+	   local colors = style.Colors
+	   local clr = imgui.Col
+	   local ImVec4 = imgui.ImVec4
+	   local ImVec2 = imgui.ImVec2
+
+		style.PopupRounding = 3;
+		style.WindowBorderSize = 1;
+		style.ChildBorderSize  = 1;
+		style.PopupBorderSize  = 1;
+		style.FrameBorderSize  = 1; 
+		style.WindowTitleAlign = imgui.ImVec2(0.5, 0.5)
+		style.ChildRounding     = 3;
+		style.WindowPadding = ImVec2(15, 15)
+		style.WindowRounding = 15.0
+		style.FramePadding = ImVec2(5, 5)
+		style.ItemSpacing = ImVec2(12, 8)
+		style.ItemInnerSpacing = ImVec2(8, 6)
+		style.IndentSpacing = 25.0
+		style.ScrollbarSize = 8.0
+		style.ScrollbarRounding = 15.0
+		style.GrabMinSize = 15.0
+		style.GrabRounding = 7.0
+		style.FrameRounding = 6.0
+		
+		colors[clr.Text] = ImVec4(0.86, 0.93, 0.89, 0.78)
+		colors[clr.TextDisabled] = ImVec4(0.36, 0.42, 0.47, 1.00)
+		colors[clr.WindowBg] = ImVec4(0.11, 0.15, 0.17, 1.00)
+		colors[clr.PopupBg] = ImVec4(0.08, 0.08, 0.08, 0.94)
+		colors[clr.Border] = ImVec4(0.43, 0.43, 0.50, 0.50)
+		colors[clr.BorderShadow] = ImVec4(0.00, 0.00, 0.00, 0.00)
+		colors[clr.FrameBg] = ImVec4(0.20, 0.25, 0.29, 1.00)
+		colors[clr.FrameBgHovered] = ImVec4(0.19, 0.12, 0.28, 1.00)
+		colors[clr.FrameBgActive] = ImVec4(0.09, 0.12, 0.14, 1.00)
+		colors[clr.TitleBg] = ImVec4(0.04, 0.04, 0.04, 1.00)
+		colors[clr.TitleBgActive] = ImVec4(0.41, 0.19, 0.63, 1.00)
+		colors[clr.TitleBgCollapsed] = ImVec4(0.00, 0.00, 0.00, 0.51)
+		colors[clr.MenuBarBg] = ImVec4(0.15, 0.18, 0.22, 1.00)
+		colors[clr.ScrollbarBg] = ImVec4(0.02, 0.02, 0.02, 0.39)
+		colors[clr.ScrollbarGrab] = ImVec4(0.20, 0.25, 0.29, 1.00)
+		colors[clr.ScrollbarGrabHovered] = ImVec4(0.18, 0.22, 0.25, 1.00)
+		colors[clr.ScrollbarGrabActive] = ImVec4(0.20, 0.09, 0.31, 1.00)
+		colors[clr.CheckMark] = ImVec4(0.59, 0.28, 1.00, 1.00)
+		colors[clr.SliderGrab] = ImVec4(0.41, 0.19, 0.63, 1.00)
+		colors[clr.SliderGrabActive] = ImVec4(0.41, 0.19, 0.63, 1.00)
+		colors[clr.Button] = ImVec4(0.41, 0.19, 0.63, 0.44)
+		colors[clr.ButtonHovered] = ImVec4(0.41, 0.19, 0.63, 0.86)
+		colors[clr.ButtonActive] = ImVec4(0.64, 0.33, 0.94, 1.00)
+		colors[clr.Header] = ImVec4(0.20, 0.25, 0.29, 0.55)
+		colors[clr.HeaderHovered] = ImVec4(0.51, 0.26, 0.98, 0.80)
+		colors[clr.HeaderActive] = ImVec4(0.53, 0.26, 0.98, 1.00)
+		colors[clr.Separator] = ImVec4(0.50, 0.50, 0.50, 1.00)
+		colors[clr.SeparatorHovered] = ImVec4(0.60, 0.60, 0.70, 1.00)
+		colors[clr.SeparatorActive] = ImVec4(0.70, 0.70, 0.90, 1.00)
+		colors[clr.ResizeGrip] = ImVec4(0.59, 0.26, 0.98, 0.25)
+		colors[clr.ResizeGripHovered] = ImVec4(0.61, 0.26, 0.98, 0.67)
+		colors[clr.ResizeGripActive] = ImVec4(0.06, 0.05, 0.07, 1.00)
+		colors[clr.PlotLines] = ImVec4(0.61, 0.61, 0.61, 1.00)
+		colors[clr.PlotLinesHovered] = ImVec4(1.00, 0.43, 0.35, 1.00)
+		colors[clr.PlotHistogram] = ImVec4(0.90, 0.70, 0.00, 1.00)
+		colors[clr.PlotHistogramHovered] = ImVec4(1.00, 0.60, 0.00, 1.00)
+		colors[clr.TextSelectedBg] = ImVec4(0.25, 1.00, 0.00, 0.43)
+	end
+
+	imgui.OnInitialize(function()
+		if config.settings.style.name == 'CorporateGrey' then
+			CorporateGrey()
+		elseif config.settings.style.name == 'Standart' then
+			Standart()
+		elseif config.settings.style.name == 'Grey Theme' then
+			grey_theme()
+		elseif config.settings.style.name == 'Dark Red Theme' then
+			Dark_red_theme()
+		elseif config.settings.style.name == 'Dark Green Theme' then
+			darkgreentheme()
+		elseif config.settings.style.name == 'Red Theme' then
+			red_theme()
+		elseif config.settings.style.name == 'Purple Theme' then
+			Purple_theme()
+		end
+
+		local search, file = findFirstFile(getFolderPath(0x14) .. '\\*.ttf')
+		while file do
+			table.insert(fonts, file)
+			file = findNextFile(search)
+		end
+		fontsArray = imgui.new['const char*'][#fonts](fonts)
+
+
+		imgui.GetIO().IniFilename = nil
+
+
+		fontSize[0] = imgui.GetIO().Fonts.ConfigData.Data[0].SizePixels
+		loadIconicFont(fontSize[0])
+
+		local icons = {}
+		for k, v in pairs(faicons) do
+			icons[#icons + 1] = v
+		end
+		iconsText = table.concat(icons, '\t')
+		
+		logo = imgui.CreateTextureFromFileInMemory(_logo, #_logo)
+
+		TBDonHomka._SETTINGS.ToggleButton = {
+			scale = 1.0,
+			AnimSpeed = 0.13,
+			colors = {
+				imgui.GetStyle().Colors[imgui.Col.ButtonActive], -- Enable circle
+				imgui.ImVec4(150 / 255, 150 / 255, 150 / 255, 1.0), -- Disable circle
+				imgui.GetStyle().Colors[imgui.Col.FrameBgHovered], -- Enable rect
+				imgui.ImVec4(100 / 255, 100 / 255, 100 / 255, 180 / 255) -- Disable rect
+			}
+		}
+	end)
+
+	_logo ="\x89\x50\x4E\x47\x0D\x0A\x1A\x0A\x00\x00\x00\x0D\x49\x48\x44\x52\x00\x00\x01\x86\x00\x00\x00\x19\x08\x06\x00\x00\x00\x35\xC7\x89\xC7\x00\x00\x01\x26\x69\x43\x43\x50\x41\x64\x6F\x62\x65\x20\x52\x47\x42\x20\x28\x31\x39\x39\x38\x29\x00\x00\x28\xCF\x63\x60\x60\x32\x70\x74\x71\x72\x65\x12\x60\x60\xC8\xCD\x2B\x29\x0A\x72\x77\x52\x88\x88\x8C\x52\x60\x3F\xCF\xC0\xC6\xC0\xCC\x00\x06\x89\xC9\xC5\x05\x8E\x01\x01\x3E\x20\x76\x5E\x7E\x5E\x2A\x03\x06\xF8\x76\x8D\x81\x11\x44\x5F\xD6\x05\x99\xC5\x40\x1A\xE0\x4A\x2E\x28\x2A\x01\xD2\x7F\x80\xD8\x28\x25\xB5\x38\x99\x81\x81\xD1\x00\xC8\xCE\x2E\x2F\x29\x00\x8A\x33\xCE\x01\xB2\x45\x92\xB2\xC1\xEC\x0D\x20\x76\x51\x48\x90\x33\x90\x7D\x04\xC8\xE6\x4B\x87\xB0\xAF\x80\xD8\x49\x10\xF6\x13\x10\xBB\x08\xE8\x09\x20\xFB\x0B\x48\x7D\x3A\x98\xCD\xC4\x01\x36\x07\xC2\x96\x01\xB1\x4B\x52\x2B\x40\xF6\x32\x38\xE7\x17\x54\x16\x65\xA6\x67\x94\x28\x18\x5A\x5A\x5A\x2A\x38\xA6\xE4\x27\xA5\x2A\x04\x57\x16\x97\xA4\xE6\x16\x2B\x78\xE6\x25\xE7\x17\x15\xE4\x17\x25\x96\xA4\xA6\x00\xD5\x42\xDC\x07\x06\x82\x10\x85\xA0\x10\xD3\x00\x6A\xB4\xD0\x64\xA0\x32\x00\xC5\x03\x84\xF5\x39\x10\x1C\xBE\x8C\x62\x67\x10\x62\x08\x90\x5C\x5A\x54\x06\x65\x32\x32\x19\x13\xE6\x23\xCC\x98\x23\xC1\xC0\xE0\xBF\x94\x81\x81\xE5\x0F\x42\xCC\xA4\x97\x81\x61\x81\x0E\x03\x03\xFF\x54\x84\x98\x9A\x21\x03\x83\x80\x3E\x03\xC3\xBE\x39\x00\xC0\xC6\x4F\xFD\x19\x3A\x36\x5C\x00\x00\x00\x09\x70\x48\x59\x73\x00\x00\x0B\x13\x00\x00\x0B\x13\x01\x00\x9A\x9C\x18\x00\x00\x06\x6E\x69\x54\x58\x74\x58\x4D\x4C\x3A\x63\x6F\x6D\x2E\x61\x64\x6F\x62\x65\x2E\x78\x6D\x70\x00\x00\x00\x00\x00\x3C\x3F\x78\x70\x61\x63\x6B\x65\x74\x20\x62\x65\x67\x69\x6E\x3D\x22\xEF\xBB\xBF\x22\x20\x69\x64\x3D\x22\x57\x35\x4D\x30\x4D\x70\x43\x65\x68\x69\x48\x7A\x72\x65\x53\x7A\x4E\x54\x63\x7A\x6B\x63\x39\x64\x22\x3F\x3E\x20\x3C\x78\x3A\x78\x6D\x70\x6D\x65\x74\x61\x20\x78\x6D\x6C\x6E\x73\x3A\x78\x3D\x22\x61\x64\x6F\x62\x65\x3A\x6E\x73\x3A\x6D\x65\x74\x61\x2F\x22\x20\x78\x3A\x78\x6D\x70\x74\x6B\x3D\x22\x41\x64\x6F\x62\x65\x20\x58\x4D\x50\x20\x43\x6F\x72\x65\x20\x36\x2E\x30\x2D\x63\x30\x30\x32\x20\x37\x39\x2E\x31\x36\x34\x33\x35\x32\x2C\x20\x32\x30\x32\x30\x2F\x30\x31\x2F\x33\x30\x2D\x31\x35\x3A\x35\x30\x3A\x33\x38\x20\x20\x20\x20\x20\x20\x20\x20\x22\x3E\x20\x3C\x72\x64\x66\x3A\x52\x44\x46\x20\x78\x6D\x6C\x6E\x73\x3A\x72\x64\x66\x3D\x22\x68\x74\x74\x70\x3A\x2F\x2F\x77\x77\x77\x2E\x77\x33\x2E\x6F\x72\x67\x2F\x31\x39\x39\x39\x2F\x30\x32\x2F\x32\x32\x2D\x72\x64\x66\x2D\x73\x79\x6E\x74\x61\x78\x2D\x6E\x73\x23\x22\x3E\x20\x3C\x72\x64\x66\x3A\x44\x65\x73\x63\x72\x69\x70\x74\x69\x6F\x6E\x20\x72\x64\x66\x3A\x61\x62\x6F\x75\x74\x3D\x22\x22\x20\x78\x6D\x6C\x6E\x73\x3A\x78\x6D\x70\x3D\x22\x68\x74\x74\x70\x3A\x2F\x2F\x6E\x73\x2E\x61\x64\x6F\x62\x65\x2E\x63\x6F\x6D\x2F\x78\x61\x70\x2F\x31\x2E\x30\x2F\x22\x20\x78\x6D\x6C\x6E\x73\x3A\x78\x6D\x70\x4D\x4D\x3D\x22\x68\x74\x74\x70\x3A\x2F\x2F\x6E\x73\x2E\x61\x64\x6F\x62\x65\x2E\x63\x6F\x6D\x2F\x78\x61\x70\x2F\x31\x2E\x30\x2F\x6D\x6D\x2F\x22\x20\x78\x6D\x6C\x6E\x73\x3A\x73\x74\x45\x76\x74\x3D\x22\x68\x74\x74\x70\x3A\x2F\x2F\x6E\x73\x2E\x61\x64\x6F\x62\x65\x2E\x63\x6F\x6D\x2F\x78\x61\x70\x2F\x31\x2E\x30\x2F\x73\x54\x79\x70\x65\x2F\x52\x65\x73\x6F\x75\x72\x63\x65\x45\x76\x65\x6E\x74\x23\x22\x20\x78\x6D\x6C\x6E\x73\x3A\x70\x68\x6F\x74\x6F\x73\x68\x6F\x70\x3D\x22\x68\x74\x74\x70\x3A\x2F\x2F\x6E\x73\x2E\x61\x64\x6F\x62\x65\x2E\x63\x6F\x6D\x2F\x70\x68\x6F\x74\x6F\x73\x68\x6F\x70\x2F\x31\x2E\x30\x2F\x22\x20\x78\x6D\x6C\x6E\x73\x3A\x64\x63\x3D\x22\x68\x74\x74\x70\x3A\x2F\x2F\x70\x75\x72\x6C\x2E\x6F\x72\x67\x2F\x64\x63\x2F\x65\x6C\x65\x6D\x65\x6E\x74\x73\x2F\x31\x2E\x31\x2F\x22\x20\x78\x6D\x70\x3A\x43\x72\x65\x61\x74\x6F\x72\x54\x6F\x6F\x6C\x3D\x22\x41\x64\x6F\x62\x65\x20\x50\x68\x6F\x74\x6F\x73\x68\x6F\x70\x20\x32\x31\x2E\x31\x20\x28\x57\x69\x6E\x64\x6F\x77\x73\x29\x22\x20\x78\x6D\x70\x3A\x43\x72\x65\x61\x74\x65\x44\x61\x74\x65\x3D\x22\x32\x30\x32\x30\x2D\x31\x30\x2D\x32\x31\x54\x30\x33\x3A\x31\x38\x3A\x31\x39\x2B\x30\x33\x3A\x30\x30\x22\x20\x78\x6D\x70\x3A\x4D\x65\x74\x61\x64\x61\x74\x61\x44\x61\x74\x65\x3D\x22\x32\x30\x32\x30\x2D\x31\x30\x2D\x32\x31\x54\x30\x33\x3A\x31\x38\x3A\x31\x39\x2B\x30\x33\x3A\x30\x30\x22\x20\x78\x6D\x70\x3A\x4D\x6F\x64\x69\x66\x79\x44\x61\x74\x65\x3D\x22\x32\x30\x32\x30\x2D\x31\x30\x2D\x32\x31\x54\x30\x33\x3A\x31\x38\x3A\x31\x39\x2B\x30\x33\x3A\x30\x30\x22\x20\x78\x6D\x70\x4D\x4D\x3A\x49\x6E\x73\x74\x61\x6E\x63\x65\x49\x44\x3D\x22\x78\x6D\x70\x2E\x69\x69\x64\x3A\x63\x66\x63\x35\x66\x38\x63\x33\x2D\x37\x32\x31\x36\x2D\x63\x36\x34\x62\x2D\x39\x33\x37\x65\x2D\x65\x64\x30\x34\x38\x62\x63\x30\x35\x61\x61\x61\x22\x20\x78\x6D\x70\x4D\x4D\x3A\x44\x6F\x63\x75\x6D\x65\x6E\x74\x49\x44\x3D\x22\x61\x64\x6F\x62\x65\x3A\x64\x6F\x63\x69\x64\x3A\x70\x68\x6F\x74\x6F\x73\x68\x6F\x70\x3A\x39\x61\x34\x32\x35\x62\x39\x34\x2D\x61\x36\x62\x65\x2D\x61\x35\x34\x61\x2D\x62\x66\x36\x66\x2D\x32\x63\x32\x33\x33\x63\x31\x30\x64\x32\x39\x36\x22\x20\x78\x6D\x70\x4D\x4D\x3A\x4F\x72\x69\x67\x69\x6E\x61\x6C\x44\x6F\x63\x75\x6D\x65\x6E\x74\x49\x44\x3D\x22\x78\x6D\x70\x2E\x64\x69\x64\x3A\x34\x62\x36\x65\x36\x34\x65\x34\x2D\x65\x63\x38\x62\x2D\x37\x65\x34\x64\x2D\x61\x63\x66\x65\x2D\x65\x38\x31\x38\x66\x33\x34\x36\x65\x64\x61\x32\x22\x20\x70\x68\x6F\x74\x6F\x73\x68\x6F\x70\x3A\x43\x6F\x6C\x6F\x72\x4D\x6F\x64\x65\x3D\x22\x33\x22\x20\x64\x63\x3A\x66\x6F\x72\x6D\x61\x74\x3D\x22\x69\x6D\x61\x67\x65\x2F\x70\x6E\x67\x22\x3E\x20\x3C\x78\x6D\x70\x4D\x4D\x3A\x48\x69\x73\x74\x6F\x72\x79\x3E\x20\x3C\x72\x64\x66\x3A\x53\x65\x71\x3E\x20\x3C\x72\x64\x66\x3A\x6C\x69\x20\x73\x74\x45\x76\x74\x3A\x61\x63\x74\x69\x6F\x6E\x3D\x22\x63\x72\x65\x61\x74\x65\x64\x22\x20\x73\x74\x45\x76\x74\x3A\x69\x6E\x73\x74\x61\x6E\x63\x65\x49\x44\x3D\x22\x78\x6D\x70\x2E\x69\x69\x64\x3A\x34\x62\x36\x65\x36\x34\x65\x34\x2D\x65\x63\x38\x62\x2D\x37\x65\x34\x64\x2D\x61\x63\x66\x65\x2D\x65\x38\x31\x38\x66\x33\x34\x36\x65\x64\x61\x32\x22\x20\x73\x74\x45\x76\x74\x3A\x77\x68\x65\x6E\x3D\x22\x32\x30\x32\x30\x2D\x31\x30\x2D\x32\x31\x54\x30\x33\x3A\x31\x38\x3A\x31\x39\x2B\x30\x33\x3A\x30\x30\x22\x20\x73\x74\x45\x76\x74\x3A\x73\x6F\x66\x74\x77\x61\x72\x65\x41\x67\x65\x6E\x74\x3D\x22\x41\x64\x6F\x62\x65\x20\x50\x68\x6F\x74\x6F\x73\x68\x6F\x70\x20\x32\x31\x2E\x31\x20\x28\x57\x69\x6E\x64\x6F\x77\x73\x29\x22\x2F\x3E\x20\x3C\x72\x64\x66\x3A\x6C\x69\x20\x73\x74\x45\x76\x74\x3A\x61\x63\x74\x69\x6F\x6E\x3D\x22\x73\x61\x76\x65\x64\x22\x20\x73\x74\x45\x76\x74\x3A\x69\x6E\x73\x74\x61\x6E\x63\x65\x49\x44\x3D\x22\x78\x6D\x70\x2E\x69\x69\x64\x3A\x63\x66\x63\x35\x66\x38\x63\x33\x2D\x37\x32\x31\x36\x2D\x63\x36\x34\x62\x2D\x39\x33\x37\x65\x2D\x65\x64\x30\x34\x38\x62\x63\x30\x35\x61\x61\x61\x22\x20\x73\x74\x45\x76\x74\x3A\x77\x68\x65\x6E\x3D\x22\x32\x30\x32\x30\x2D\x31\x30\x2D\x32\x31\x54\x30\x33\x3A\x31\x38\x3A\x31\x39\x2B\x30\x33\x3A\x30\x30\x22\x20\x73\x74\x45\x76\x74\x3A\x73\x6F\x66\x74\x77\x61\x72\x65\x41\x67\x65\x6E\x74\x3D\x22\x41\x64\x6F\x62\x65\x20\x50\x68\x6F\x74\x6F\x73\x68\x6F\x70\x20\x32\x31\x2E\x31\x20\x28\x57\x69\x6E\x64\x6F\x77\x73\x29\x22\x20\x73\x74\x45\x76\x74\x3A\x63\x68\x61\x6E\x67\x65\x64\x3D\x22\x2F\x22\x2F\x3E\x20\x3C\x2F\x72\x64\x66\x3A\x53\x65\x71\x3E\x20\x3C\x2F\x78\x6D\x70\x4D\x4D\x3A\x48\x69\x73\x74\x6F\x72\x79\x3E\x20\x3C\x70\x68\x6F\x74\x6F\x73\x68\x6F\x70\x3A\x54\x65\x78\x74\x4C\x61\x79\x65\x72\x73\x3E\x20\x3C\x72\x64\x66\x3A\x42\x61\x67\x3E\x20\x3C\x72\x64\x66\x3A\x6C\x69\x20\x70\x68\x6F\x74\x6F\x73\x68\x6F\x70\x3A\x4C\x61\x79\x65\x72\x4E\x61\x6D\x65\x3D\x22\x50\x65\x72\x73\x6F\x6E\x61\x6C\x20\x53\x6B\x69\x6E\x20\x43\x68\x61\x6E\x67\x65\x72\x22\x20\x70\x68\x6F\x74\x6F\x73\x68\x6F\x70\x3A\x4C\x61\x79\x65\x72\x54\x65\x78\x74\x3D\x22\x50\x65\x72\x73\x6F\x6E\x61\x6C\x20\x53\x6B\x69\x6E\x20\x43\x68\x61\x6E\x67\x65\x72\x22\x2F\x3E\x20\x3C\x2F\x72\x64\x66\x3A\x42\x61\x67\x3E\x20\x3C\x2F\x70\x68\x6F\x74\x6F\x73\x68\x6F\x70\x3A\x54\x65\x78\x74\x4C\x61\x79\x65\x72\x73\x3E\x20\x3C\x2F\x72\x64\x66\x3A\x44\x65\x73\x63\x72\x69\x70\x74\x69\x6F\x6E\x3E\x20\x3C\x2F\x72\x64\x66\x3A\x52\x44\x46\x3E\x20\x3C\x2F\x78\x3A\x78\x6D\x70\x6D\x65\x74\x61\x3E\x20\x3C\x3F\x78\x70\x61\x63\x6B\x65\x74\x20\x65\x6E\x64\x3D\x22\x72\x22\x3F\x3E\xBB\xF2\x07\x5F\x00\x00\x07\x12\x49\x44\x41\x54\x78\xDA\xED\x5D\xED\x75\xAE\x20\x0C\xEE\x0A\xAE\xE0\x0A\xAE\xC0\x0A\xEF\x0A\xAE\xC0\x0A\xAE\xE0\x0A\xAE\xC0\x0A\xAE\xC0\x0A\xAC\xC0\x6D\x7B\xB0\xB5\x96\x84\x04\x83\xDA\x73\xC3\x39\xF9\xD3\x2A\x95\x87\x24\x0F\xF9\xD0\xBE\xC5\x18\xDF\x54\x54\x54\x54\x54\x54\x36\x51\x10\x54\x54\x54\x54\x54\x40\x62\xE8\xDF\xC5\x54\xC8\xF0\xA6\x43\xC7\x85\xE3\x5D\xE7\xBA\x8C\x1E\xF6\x8A\x4C\x15\x96\xBD\x62\xA9\xE3\xA0\x13\x3F\x88\xC1\xC6\x73\x63\x79\x97\x97\xC2\xAA\xA3\xA1\x03\x9B\xDF\x25\x10\xF4\xD0\xAA\x73\x43\x49\x75\x4C\x38\x61\x23\xA4\x6B\x46\x45\xED\x3F\x26\x86\xF4\x83\x35\x9E\x1F\x93\x42\xAB\x43\x58\x51\x6B\x0F\x2D\x1F\xFA\xEC\x34\xAA\xFD\xC2\xF1\x45\x20\xD6\xDC\xF0\x4A\x10\xFF\x37\x31\xB8\x28\x33\x8C\xC0\xA9\x66\x51\x83\xD6\x91\x4E\xB7\x67\x86\x57\x14\x3F\x71\x9C\x05\xEC\xFA\x93\x54\x14\xCD\xC7\x44\x7E\x4D\x7C\x24\x85\x18\x56\xA4\xB6\xF0\x71\xFA\x98\x80\x13\xC8\x94\xE6\x33\x12\x04\x53\x39\x8F\x2F\x85\xC2\x29\x3D\x61\x01\x42\xF4\x9C\xB4\xC4\x21\x44\xF7\x19\x83\x72\x69\xAE\x0E\xB8\xDF\x70\x89\x16\x39\x49\x1B\xE4\x39\x4D\x2D\xA1\x23\xF7\xBA\x86\x06\x90\xC3\x72\x4E\x58\x6F\xBA\x68\x91\x34\xD3\xB8\x9B\xCB\x51\xD6\x5D\x38\x20\x39\x2A\x16\xC8\x3C\x0E\x59\xAF\x38\xBE\x85\x88\x6B\x4D\xBF\xDF\xDB\xB5\x45\xB2\x07\x13\x17\xCF\xDA\xEB\x05\xF4\xB5\x39\xFE\xC9\xEE\x37\x1F\x12\x00\xBB\x9F\x12\xAE\x1D\x73\x7D\xB7\xF8\x48\x0A\x31\x38\x82\xD2\x99\x82\x71\x4C\x12\x91\xC7\xC9\x79\x66\xE0\x24\xCA\x09\xAB\x17\x28\x2D\xC1\x0C\xD1\x3F\xAE\xB3\x00\x96\x13\xB0\x79\x1D\xA2\x94\xC7\x61\x09\x7B\x36\x51\x30\x22\xDE\x0B\x3E\x9F\x00\x29\x0C\x15\xCE\x60\xBF\xAF\x9E\x30\x9F\x25\x3A\xD2\x90\x31\xA0\xDC\x75\x5D\x61\x7F\xD0\x3D\x92\xC6\x37\x1D\x7E\x20\xA7\x60\x08\xF7\x3A\xE8\x59\xB8\xFA\x77\xB5\xBE\xB6\xC6\x3F\xED\x3F\x37\x35\x17\x88\xEB\xBB\xCD\x47\x8A\x10\x03\xC0\xB2\x4E\x20\x3F\x7C\x5C\xF4\xD9\xE2\xF8\x70\x70\xE4\xB5\xA1\x74\x27\x94\xEA\x98\x19\x27\xBB\x15\x51\x4E\x76\x1A\x0F\x38\x49\x05\x62\x64\x64\x2F\x8C\x16\x0C\xB6\x8F\x04\x87\x30\x72\xF1\x02\x8C\x6B\x05\x0E\x04\xBF\x9E\x8F\x78\x02\x8D\x50\x24\x2B\x8D\x2F\x90\x42\x62\x91\xCD\x4E\x5F\xCC\x59\xFD\xBB\x41\x5F\xC5\xF1\x4F\xFA\x55\x9B\x76\xB7\x0C\xBB\xBF\xC5\x47\x4A\x45\x0C\x96\x49\x0C\x2B\xA1\x05\xF6\x45\x58\x34\x36\xCF\x84\x6D\x48\x26\x4C\xF6\xE9\x9E\x63\x38\xBD\x1C\x4E\x04\x36\x13\x29\x94\xC2\xF3\x11\xC9\xEF\x5A\x66\xC8\xDF\x09\x18\xA6\xE1\x90\xD5\x03\x89\x61\x4B\x25\xD9\x9A\x76\x69\x24\x14\xEF\x80\xF4\x89\xE3\xA4\xFF\x18\x8E\x09\x22\x2E\x69\x62\x08\x67\x6B\x80\x9B\x1E\x4B\x38\xFA\x1B\xF4\x55\x1C\x7F\xA4\xA3\x6B\x9F\xE2\xCC\xA5\xE4\x02\x60\xC3\x8F\xF2\x91\x14\x62\xF0\xE9\x8F\x41\xE2\x4A\x0E\xAF\x56\xD1\x53\xD8\xDF\xD5\xCE\x93\x31\x72\x0B\x28\x0B\x7A\x7A\x4A\x0E\xC3\x03\xD1\x82\xA7\x86\xA9\x69\x3D\x39\x23\xED\x19\x8C\xBF\x66\x9E\x41\x2A\xEF\xFA\xEB\x79\x1E\x40\x0C\x1D\x33\x9A\xFB\xCA\xE7\x72\x1C\x53\x92\xC0\x75\x3C\x02\xC4\x10\x09\xE9\x29\x77\x02\xBF\x5C\xEA\x6C\x15\xDE\xA3\xD6\xC4\x70\x56\x5F\x45\xF1\x07\x88\x6A\xC5\x0E\x28\xBB\x7B\x66\x49\x9B\x6A\xE5\x23\x5B\x75\x25\x85\x9A\x87\x4D\x4C\xEB\x24\x1C\x52\x72\x28\x81\x48\x0C\x1B\xD3\xBF\x90\xA2\x59\x7F\xDC\x78\x6A\xBE\x9A\xA0\x54\x96\x19\x0A\xAE\xB5\x86\x86\x9C\xC0\x39\xCE\xF0\x32\x62\x38\xD9\x4D\x13\x72\x04\x01\xEC\x3D\x39\xD5\xD0\x80\x18\xE2\xFE\x39\x85\x89\xC1\x60\xC5\xE3\x46\xC4\x60\x0B\x27\xDD\xAB\xF5\x55\x14\xFF\x4C\xB4\x10\x28\x69\xB9\xB4\x96\xEE\x8C\x4D\x5D\xE5\x23\x5B\x10\x83\xCF\x38\x50\x56\xDE\x8B\xB1\xE8\xED\x84\x98\x93\x52\x8D\xC1\x33\x4E\xA0\x5B\x78\xD8\x71\x0A\x8F\x0C\x96\x5E\x0A\x6B\x2C\x15\x8A\x38\x86\xE6\x32\x4E\xD1\x32\xE7\xB8\x9A\x18\xBA\x58\x7E\x19\x8B\x64\xF4\x0C\x47\x31\xD7\x3A\x5E\x82\x63\x0A\xC0\xCF\x86\x8B\x88\xC1\x36\x26\x86\xEA\x1C\x79\x23\x7D\x15\xC5\x3F\x73\xFF\x04\x3C\xF7\x22\xD4\x35\x76\xB9\x8F\x94\x22\x86\xAF\x96\x27\x62\xFE\x4C\x6A\xD1\x9C\xE1\x04\xE6\xF2\x07\x72\xA9\x0D\xFF\x2C\xA3\x1E\xE3\x90\xE2\xF6\xCC\x21\x06\xA0\x3B\xA5\x07\x4E\x0E\xEE\x29\xC4\x70\x88\xD0\xA6\xC8\x7F\x09\xD3\x57\x3A\x32\xD3\x88\x18\x5E\xC0\x1A\x42\x5A\x63\x6B\x62\x58\xFE\x02\x31\x08\xEA\xAB\x28\xFE\x94\xE7\x27\xFA\x51\xFB\x54\x1F\x19\xA5\xBA\x92\x6E\x62\x43\xAA\x33\xB7\x92\xAD\x66\x1B\xF9\xE5\x0A\x3D\x44\x3C\x26\x0E\x31\x14\x3A\x9F\x66\x86\xA1\xCD\x48\xD4\x61\x19\xF3\xDC\x42\x0C\x00\x51\xEC\x8B\x7C\x33\x12\x09\x0E\x15\x8E\x2C\x94\x0A\xDB\x95\xC4\x60\x90\x42\x77\xC8\x44\x47\x67\x88\xA1\x2B\xA5\x7A\x19\xF3\x0C\x17\x13\x83\x94\xBE\x8A\xE2\x2F\x44\x0C\xCB\x93\x7D\xE4\x5D\xC4\x00\x55\xCA\x67\xE6\xA2\x8F\x85\xF1\xF5\x44\xEE\xCF\xEE\xBA\x90\x5C\x61\x63\x47\xC4\x59\x53\xDA\xE7\x3C\x23\x95\x54\xF3\x3E\x88\x21\x9E\xBE\xD6\xDD\x5A\xD7\x52\x94\x75\x63\x2A\xC9\x70\x3A\x69\x00\x9C\x4C\xC1\x91\xCD\x11\x6E\x53\xED\xA4\x89\x61\xB7\x27\x94\x83\xC9\xD9\xAE\xA4\xF5\x6C\x9D\x21\x7E\xBF\x3C\xD8\x5F\x51\x7C\x16\xD6\x57\x51\xFC\x19\xA9\xA4\x80\xA4\x6E\xEC\x93\x7D\xE4\x5D\xC4\xE0\x5A\xCC\x03\x74\xFD\x2C\xC8\x7C\x4B\xA4\xBD\xE0\x03\x15\x68\x7A\x6E\x98\x0E\x30\xBA\x65\xAC\x71\xAE\x24\x86\xDA\x02\xAE\x79\x00\x31\xB8\x9D\xB1\x50\x88\x77\x64\x12\x83\x2D\xB4\x21\xBA\x16\xC4\x50\xE8\x54\x93\x24\x86\xB1\x94\xCA\x60\xE8\xAC\xBB\x88\x18\x24\xF5\x55\x14\x7F\xA0\xF8\x3C\x64\x30\x37\xC8\x73\xD8\x27\xFB\xC8\x47\x13\x43\x4A\x11\x4C\x9C\x79\x00\x23\xB0\x88\x41\xFB\x88\xB7\x36\x0E\x85\xEE\xA6\x5C\x64\xB1\x30\x6A\x2D\xEC\x0E\x2E\x82\xD1\x18\xC2\xE9\x0B\x2A\x48\x85\x52\x7A\xAC\x66\x3F\xD3\x3D\x53\x85\xEE\xF4\xC0\xE9\xFE\x05\xA4\x3B\xA0\xF4\x60\x47\x74\x14\x50\x8A\x61\x6E\x41\x0C\x44\xE7\x24\x61\x83\x50\x5D\xC6\x21\x58\x8E\x91\xD0\x8E\x2D\x4D\x0C\x0D\xF4\x55\x14\xFF\x08\x77\x4A\x8D\x8C\x03\x84\x7D\xB2\x8F\xBC\x8B\x18\x4A\xEF\x46\xD8\x9D\x81\x3B\x2E\x78\x44\x46\x9F\x81\xEA\xFD\x14\xCB\xEF\x68\x0C\x04\xA5\xDA\x72\x95\xA5\xDC\x77\x55\x0F\x7B\x81\x1C\x0C\x35\x57\x4B\x4C\xC3\x8C\x02\xFB\x19\x6A\x74\x89\x40\x82\x5B\x7A\x01\xEB\x32\x9B\x84\x1C\xC5\xD8\x82\x18\x08\xCE\x49\xC2\x06\x29\x69\x13\x47\xC0\xF2\x53\xB7\x1B\x13\x83\xB4\xBE\x8A\xE3\x8F\xE8\xA5\xDF\x75\x4E\x6D\xA9\x69\x0F\xF8\x07\xF3\x54\x1F\xF9\xC8\xE2\x33\xB7\x30\x4B\x2C\xB8\xAD\x85\xDF\x53\xC7\xCC\x54\xAA\x58\xAA\x55\xD4\x9E\x1C\x10\xE5\x34\x85\xD3\xD7\xC0\x3C\xA1\x7B\xA1\xFD\xAC\x21\x86\x58\x89\xED\xDE\xD9\x75\x15\x8E\xE2\x45\x24\x5D\x11\x62\x28\xE8\x91\x48\xAA\x0E\x89\x86\x38\x58\xBE\x0A\x29\x92\x53\xC4\xD0\x48\x5F\x9B\xE0\x1F\xCF\x7D\xAD\xD6\x47\xB9\x4F\x59\xB4\xF0\x91\xBF\xFE\x83\x5B\xE0\x84\x48\x44\x65\x5C\xCE\x2E\x1A\x98\x27\x20\x85\x2B\x0F\xA4\x78\xFA\xF8\xFD\x45\xD5\x39\x0A\x7C\xF8\x6E\xF7\x37\x67\x86\x81\x19\x22\x56\x1E\xCB\xAB\x03\x51\xCD\x9C\xE6\xEA\x01\xEC\x4D\x61\x1D\x1E\x99\xF3\xCC\x7E\x9E\xE9\xAE\x19\x23\xAF\x95\xDA\x17\x52\x88\xBF\xD6\x46\xC4\x36\xA4\x67\xD9\xB0\x98\x0B\x8E\x8E\xF5\x1E\x01\x92\xA6\x30\x6F\x42\x03\x49\x11\xB1\xF4\x95\x8B\x67\xE9\xFA\x46\xFA\xDA\x14\xFF\x44\x94\x1C\x2C\x73\x5F\x32\x7D\xA2\x8F\xFC\x41\x0C\x23\x94\xCB\x3B\xD9\x52\xE8\x2A\x25\xEC\x16\x0D\xCD\x33\x21\x4E\x24\x27\x23\xD2\x95\x34\x67\xAE\xB7\x11\xF8\x5C\x2E\xA2\xA8\xB9\xB9\xB6\xB4\xD2\x50\x81\xD5\x58\x08\xA5\x73\xF7\x0C\x08\x0E\x13\xC1\x01\x43\x73\x0E\x67\xF7\x52\x20\x25\x32\xEE\x52\x7D\x39\x8C\x4D\x0D\x5E\x00\x31\xD4\x60\x31\x95\xFE\x5E\x85\x0E\x88\xFF\xF3\xAB\xF8\xDD\xB3\x9F\xD3\xFB\x2D\x1D\x52\xFA\xDC\x04\x19\xCF\x9B\xF4\xF5\x12\xFC\x77\x3E\x64\x01\x74\xF2\x85\x90\xE5\xE3\x7C\xE4\xAF\x54\xD2\x93\x46\xCC\x7C\x86\x42\xC7\xDF\x1C\xBA\x97\x3A\x74\xFC\x1D\xBB\x3A\x46\x0C\x2A\x2A\x2A\x2A\x2A\x2A\x4A\x0C\x2A\x2A\x2A\x2A\x2A\x3F\xE5\x1F\xE9\x56\xBF\x6D\xDC\xA8\x24\x96\x00\x00\x00\x00\x49\x45\x4E\x44\xAE\x42\x60\x82"
+
+	function imgui.ButtonDisabled(...)
+		imgui.PushStyleColor(imgui.Col.Button, imgui.ImVec4(0.10, 0.10, 0.10, 1.00/2) )
+		imgui.PushStyleColor(imgui.Col.ButtonHovered, imgui.ImVec4(0.10, 0.10, 0.10, 1.00/2))
+		imgui.PushStyleColor(imgui.Col.ButtonActive, imgui.ImVec4(0.10, 0.10, 0.10, 1.00/2))
+		imgui.PushStyleColor(imgui.Col.Text, imgui.GetStyle().Colors[imgui.Col.TextDisabled])
+			local result = imgui.Button(...)
+		imgui.PopStyleColor(4)
+		return result
+	end
+
+	function imgui.CenterText(text) -- by https://www.blast.hk/threads/13380/post-291217
+		local width = imgui.GetWindowWidth()
+		local style = imgui.GetStyle()
+		local render_text = function(text_)
+			for w in text_:gmatch('[^\r\n]+') do
+				local textsize = w:gsub('{.-}', '')
+				local text_width = imgui.CalcTextSize(textsize)
+				imgui.SetCursorPosX( width / 2 - text_width .x / 2 )
+				local text, colors_, m = {}, {}, 1
+				w = w:gsub('{(......)}', '{%1FF}')
+				while w:find('{........}') do
+					local n, k = w:find('{........}')
+					w = w:sub(1, n - 1) .. w:sub(k + 1, #w)
+				end
+				if text[0] then
+					for i = 0, #text do
+						imgui.TextColored(colors_[i] or colors[1], (text[i]))
+						imgui.SameLine(nil, 0)
+					end
+					imgui.NewLine()
+				else
+					imgui.Text(w)
+				end
+			end
+		end
+		render_text(text)
+	end
+
+	function imgui.Linkk(link)
+		if status_hovered then
+			local p = imgui.GetCursorScreenPos()
+			imgui.TextColored(imgui.ImVec4(0, 0.5, 1, 1), link)
+			imgui.GetWindowDrawList():AddLine(imgui.ImVec2(p.x, p.y + imgui.CalcTextSize(link).y), imgui.ImVec2(p.x + imgui.CalcTextSize(link).x, p.y + imgui.CalcTextSize(link).y), imgui.GetColorU32(imgui.ImVec4(0, 0.5, 1, 1)))
+		else
+			imgui.TextColored(imgui.ImVec4(0, 0.3, 0.8, 1), link)
+		end
+		if imgui.IsItemClicked() then os.execute('explorer '..link)
+		elseif imgui.IsItemHovered() then
+			status_hovered = true else status_hovered = false
+		end
+	end
 
 -- https://github.com/juliettef/imgui_markdown/blob/master/imgui_markdown.h#L230
-local function imgui_text_wrapped(clr, text)
-    if clr then imgui.PushStyleColor(ffi.C.ImGuiCol_Text, clr) end
-
-    text = ffi.new('char[?]', #text + 1, text)
-    local text_end = text + ffi.sizeof(text) - 1
-    local pFont = imgui.GetFont()
-
-    local scale = 1.0
-    local endPrevLine = pFont:CalcWordWrapPositionA(scale, text, text_end, imgui.GetContentRegionAvail().x)
-    imgui.TextUnformatted(text, endPrevLine)
-
-    while endPrevLine < text_end do
-        text = endPrevLine
-        if text[0] == 32 then text = text + 1 end
-        endPrevLine = pFont:CalcWordWrapPositionA(scale, text, text_end, imgui.GetContentRegionAvail().x)
-        if text == endPrevLine then
-            endPrevLine = endPrevLine + 1
-        end
-        imgui.TextUnformatted(text, endPrevLine)
-    end
-
-    if clr then imgui.PopStyleColor() end
-end
-
--- https://blast.hk/threads/13380/post-231049
-local function split(str, delim, plain)
-	local tokens, pos, i, plain = {}, 1, 1, not (plain == false)
-	repeat
-		local npos, epos = string.find(str, delim, pos, plain)
-		tokens[i] = string.sub(str, pos, npos and npos - 1)
-		pos = epos and epos + 1
-		i = i + 1
-	until not pos
-	return tokens
-end
-
--- https://fishlake-scripts.ru/threads/8/post-24
-local function imgui_text_color(text, wrapped)
-	local style = imgui.GetStyle()
-	local colors = style.Colors
-
-	text = text:gsub('{(%x%x%x%x%x%x)}', '{%1FF}')
-	local render_func = wrapped and imgui_text_wrapped or function(clr, text)
+	local function imgui_text_wrapped(clr, text)
 		if clr then imgui.PushStyleColor(ffi.C.ImGuiCol_Text, clr) end
-		imgui.TextUnformatted(text)
+
+		text = ffi.new('char[?]', #text + 1, text)
+		local text_end = text + ffi.sizeof(text) - 1
+		local pFont = imgui.GetFont()
+
+		local scale = 1.0
+		local endPrevLine = pFont:CalcWordWrapPositionA(scale, text, text_end, imgui.GetContentRegionAvail().x)
+		imgui.TextUnformatted(text, endPrevLine)
+
+		while endPrevLine < text_end do
+			text = endPrevLine
+			if text[0] == 32 then text = text + 1 end
+			endPrevLine = pFont:CalcWordWrapPositionA(scale, text, text_end, imgui.GetContentRegionAvail().x)
+			if text == endPrevLine then
+				endPrevLine = endPrevLine + 1
+			end
+			imgui.TextUnformatted(text, endPrevLine)
+		end
+
 		if clr then imgui.PopStyleColor() end
 	end
 
-	local color = colors[ffi.C.ImGuiCol_Text]
-	for _, w in ipairs(split(text, '\n')) do
-		local start = 1
-		local a, b = w:find('{........}', start)
-		while a do
-			local t = w:sub(start, a - 1)
-			if #t > 0 then
-				render_func(color, t)
-				imgui.SameLine(nil, 0)
-			end
+	-- https://blast.hk/threads/13380/post-231049
+	local function split(str, delim, plain)
+		local tokens, pos, i, plain = {}, 1, 1, not (plain == false)
+		repeat
+			local npos, epos = string.find(str, delim, pos, plain)
+			tokens[i] = string.sub(str, pos, npos and npos - 1)
+			pos = epos and epos + 1
+			i = i + 1
+		until not pos
+		return tokens
+	end
 
-			local clr = w:sub(a + 1, b - 1)
-			if clr:upper() == 'STANDART' then color = colors[ffi.C.ImGuiCol_Text]
-			else
-				clr = tonumber(clr, 16)
-				if clr then
-					local r = bit.band(bit.rshift(clr, 24), 0xFF)
-					local g = bit.band(bit.rshift(clr, 16), 0xFF)
-					local b = bit.band(bit.rshift(clr, 8), 0xFF)
-					local a = bit.band(clr, 0xFF)
-					color = imgui.ImVec4(r / 255, g / 255, b / 255, a / 255)
-				end
-			end
+	-- https://fishlake-scripts.ru/threads/8/post-24
+	local function imgui_text_color(text, wrapped)
+		local style = imgui.GetStyle()
+		local colors = style.Colors
 
-			start = b + 1
-			a, b = w:find('{........}', start)
+		text = text:gsub('{(%x%x%x%x%x%x)}', '{%1FF}')
+		local render_func = wrapped and imgui_text_wrapped or function(clr, text)
+			if clr then imgui.PushStyleColor(ffi.C.ImGuiCol_Text, clr) end
+			imgui.TextUnformatted(text)
+			if clr then imgui.PopStyleColor() end
 		end
-		imgui.NewLine()
-		if #w >= start then
-			imgui.SameLine(nil, 0)
-			render_func(color, w:sub(start))
+
+		local color = colors[ffi.C.ImGuiCol_Text]
+		for _, w in ipairs(split(text, '\n')) do
+			local start = 1
+			local a, b = w:find('{........}', start)
+			while a do
+				local t = w:sub(start, a - 1)
+				if #t > 0 then
+					render_func(color, t)
+					imgui.SameLine(nil, 0)
+				end
+
+				local clr = w:sub(a + 1, b - 1)
+				if clr:upper() == 'STANDART' then color = colors[ffi.C.ImGuiCol_Text]
+				else
+					clr = tonumber(clr, 16)
+					if clr then
+						local r = bit.band(bit.rshift(clr, 24), 0xFF)
+						local g = bit.band(bit.rshift(clr, 16), 0xFF)
+						local b = bit.band(bit.rshift(clr, 8), 0xFF)
+						local a = bit.band(clr, 0xFF)
+						color = imgui.ImVec4(r / 255, g / 255, b / 255, a / 255)
+					end
+				end
+
+				start = b + 1
+				a, b = w:find('{........}', start)
+			end
+			imgui.NewLine()
+			if #w >= start then
+				imgui.SameLine(nil, 0)
+				render_func(color, w:sub(start))
+			end
 		end
 	end
-end
+	
+	function imgui.SelectButton(name, bool, size) -- by CaJlaT, eddited dmitriyewich
+		if bool[0] then
+			imgui.PushStyleColor(imgui.Col.Button, imgui.GetStyle().Colors[imgui.Col.ButtonActive])
+			imgui.PushStyleColor(imgui.Col.ButtonHovered, imgui.GetStyle().Colors[imgui.Col.ButtonHovered])
+			imgui.PushStyleColor(imgui.Col.ButtonActive, imgui.GetStyle().Colors[imgui.Col.Button])
+		else
+			imgui.PushStyleColor(imgui.Col.Button, imgui.GetStyle().Colors[imgui.Col.Button])
+			imgui.PushStyleColor(imgui.Col.ButtonHovered, imgui.GetStyle().Colors[imgui.Col.ButtonHovered])
+			imgui.PushStyleColor(imgui.Col.ButtonActive, imgui.GetStyle().Colors[imgui.Col.ButtonActive])
+		end
+		if not size then size = imgui.ImVec2(0, 0) end
+		local result = imgui.Button(name, size)
+		imgui.PopStyleColor(3)
+		if result then bool[0] = not bool[0] end
+		return result
+	end
 
 main_window = imgui.new.bool(false) -- основное окно, по-умолчанию выключено
-local autoupdateState = config.settings.autoupdate -- автообновление
-local autoupdateStatev = imgui.new.bool(config.settings.autoupdate) -- тоже автообновление
+local autoupdateStatev = imgui.new.bool(config.settings.autoupdate) --  автообновление
+arztextdrawactive = imgui.new.bool(config.settings.arztextdrawactive)
+preview_method = imgui.new.bool(config.settings.preview_method)
 changelog_window_state = imgui.new.bool(false) -- окно истории изменений
 local nick = imgui.new.char[128]('')
 local idskin = imgui.new.char[128]('')
-local cmdbuffer = imgui.new.char[128](config.settings.cmd)
+local cmdbuffer = imgui.new.char[128]('')
 local combo = imgui.new.int(0)
 fAlpha = 0.00
+local selected = imgui.new.int(config.settings.style.selected)
+local array = {'CorporateGrey', 'Standart', 'Grey Theme', 'Dark Red Theme', 'Dark Green Theme', 'Red Theme', 'Purple Theme'}
+local cArray = imgui.new['const char*'][#array](array)
 
+GenderBySkin = 'all'
+male_button = imgui.new.bool(false)
+female_button = imgui.new.bool(false)
+
+button_skin = {}
+for i = 1, 311 do
+	button_skin[i] = imgui.new.bool(false)
+end
+button_skin_new = {}
+for k, v in pairs(config.skins) do  
+	button_skin_new[v] = imgui.new.bool(false)
+end
+	
 imgui.OnFrame(function() return main_window[0] and isSampfuncsLoaded() and isSampLoaded() and not isPauseMenuActive() and not sampIsScoreboardOpen() end,
 function(one)
 	imgui.PushStyleVarFloat(imgui.StyleVar.Alpha, fAlpha)
@@ -632,7 +1096,7 @@ function(one)
 	if imgui.IsItemHovered() then
 		imgui.BeginTooltip()
 		imgui.PushTextWrapPos(600)
-		imgui.TextUnformatted(fa.ICON_FA_COPYRIGHT .. "dmitriyewich aka Валерий Дмитриевич.\nРаспространение допускается только с указанием автора или ссылки на пост в вк")
+		imgui.TextUnformatted(fa.ICON_FA_COPYRIGHT .. "dmitriyewich aka Валерий Дмитриевич.\nРаспространение допускается только с указанием автора или ссылки на пост в вк/gthub")
 		imgui.PopTextWrapPos()
 		imgui.EndTooltip()
 	end	
@@ -640,7 +1104,6 @@ function(one)
 	imgui.Text(' Введите ник')
 	imgui.SameLine()
 	imgui.PushItemWidth(147)
-	local buffer_size = ffi.sizeof(nick)
 	imgui.InputTextWithHint('##Введите ник3', 'Nick_Name', nick, ffi.sizeof(nick) - 1, imgui.InputTextFlags.AutoSelectAll)
 	imgui.PopItemWidth()
 	imgui.SameLine()
@@ -716,7 +1179,10 @@ function(one)
 			for k, v in pairs(config.skins) do
 				local nametoid = sampGetPlayerIdByNickname(k)
 				changeSkin(nametoid, v)
-			end		
+			end
+			for k, v in pairs(config.skins) do  
+				button_skin_new[v] = imgui.new.bool(false)
+			end			
 		else
 			lua_thread.create(function() 
 				saveskintext = 'Введи свой никнейм или другого игрока и ID скина!'
@@ -730,10 +1196,8 @@ function(one)
 		result, pped = sampGetCharHandleBySampPlayerId(nameid)
 		if result then
 			skin_id = getCharModel(pped)
-			-- skin_id = mid
 			else 
 			skin_id = getCharModel(PLAYER_PED)
-			-- skin_id = sID
 		end
 	end	
 	imgui.CenterText(""..saveskintext)
@@ -770,23 +1234,112 @@ function(one)
 	
 	if imgui.CollapsingHeader('Предпросмотр скинов') then
 		if imgui.CollapsingHeader('Стандартные скины') then
-		local standartskin = 1 
-			for i = 1, 311, 1 do
-				if isModelInCdimage(i) then
-					if imgui.Button(""..i, imgui.ImVec2(31.5, 30)) then
-						testtextdraw(i)		
-					end					
+		local standartskin = 1
+			imgui.SetCursorPosX((imgui.GetWindowWidth() - 325) / 2)
+			if imgui.SelectButton('Мужские скины', male_button, imgui.ImVec2(150, 33)) then
+				if male_button[0] then
+					GenderBySkin = 'male'
 				else
-					imgui.ButtonDisabled(""..i, imgui.ImVec2(31.5, 30))
-				end	
-				if standartskin % 9 ~= 0 and standartskin ~= 311 then
+					GenderBySkin = 'all'
+					if female_button[0] then
+						female_button[0] = false
+						male_button[0] = false
+					end
+				end
+				 
+			end
+			imgui.SameLine()
+			if imgui.SelectButton('Женские скины', female_button, imgui.ImVec2(150, 33)) then
+				if female_button[0] then
+					GenderBySkin = 'female'
+				else
+					GenderBySkin = 'all'
+					if male_button[0] then
+						female_button[0] = false
+						male_button[0] = false
+					end
+				end
+			end
+			
+		if male_button[0] or female_button[0] then 
+			for i = 1, 311, 1 do
+				if isModelInCdimage(i) and getGenderBySkinId(i) == GenderBySkin then
+						if imgui.SelectButton(''..i, button_skin[i], imgui.ImVec2(34.5, 33)) then
+							if button_skin[i][0] then
+								if preview_method[0] then
+									spawnCharFunc(i)
+								else
+									testtextdraw(i)
+								end
+							else
+								if preview_method[0] then
+									delete_spawnCharFunc()
+								else
+									sampTextdrawDelete(2048)
+								end
+							end
+						end				
+				else
+					imgui.ButtonDisabled(""..i, imgui.ImVec2(34.5, 33))
+				end
+				if imgui.IsItemHovered() then
+					imgui.BeginTooltip()
+					imgui.PushTextWrapPos(600)
+						imgui.TextUnformatted("Название модели: "..NameModel(i))
+					imgui.PopTextWrapPos()
+					imgui.EndTooltip()
+				end
+				if standartskin % 8 ~= 0 and standartskin ~= 311 then
 					imgui.SameLine()
 				end
-				standartskin = standartskin + 1				
-			end		
+				standartskin = standartskin + 1
+			end
+		end
+
+		if not male_button[0] and not female_button[0] then 
+			for i = 1, 311, 1 do
+				if isModelInCdimage(i) then
+					if imgui.SelectButton(''..i, button_skin[i], imgui.ImVec2(34.5, 33)) then
+						if button_skin[i][0] then
+							if preview_method[0] then
+								spawnCharFunc(i)
+							else
+								testtextdraw(i)
+							end
+						else
+							if preview_method[0] then
+								delete_spawnCharFunc()
+							else
+								sampTextdrawDelete(2048)
+							end
+						end
+					end
+				else
+					imgui.ButtonDisabled(""..i, imgui.ImVec2(34.5, 33))
+				end
+					if imgui.IsItemHovered() then
+						imgui.BeginTooltip()
+						imgui.PushTextWrapPos(600)
+							imgui.TextUnformatted("Название модели: "..NameModel(i))
+						imgui.PopTextWrapPos()
+						imgui.EndTooltip()
+					end
+				if standartskin % 8 ~= 0 and standartskin ~= 311 then
+					imgui.SameLine()
+				end
+					standartskin = standartskin + 1
+				end
+			end
 		end
 		
 		if imgui.CollapsingHeader('Новые скины') then
+			if imgui.IsItemHovered() then
+				imgui.BeginTooltip()
+				imgui.PushTextWrapPos(500)
+					imgui.TextUnformatted("Добавляются при привязке скина к нику\nНезанятые иды можно посмотреть по кнопке в истории изменений\n" .. fa.ICON_FA_BOLT .. "Необходимо учесть, что без Open Limit Adjuster или fastman92 limit adjuster под скины можно использовать только с 1 по 799 ид(которые не заняты), в противном случае необходимо увеличивать 'Count of killable model IDs'")
+				imgui.PopTextWrapPos()
+				imgui.EndTooltip()
+			end
 		listedNotDuplicate = {}
 		notduplicate = {}
 		for _, v in pairs(config.skins) do
@@ -796,26 +1349,30 @@ function(one)
 			end      
 		end
 		table.sort(notduplicate)		
-			if imgui.IsItemHovered() then
-				imgui.BeginTooltip()
-				imgui.PushTextWrapPos(600)
-					imgui.TextUnformatted("Добавляются при привязке скина к нику\nНезанятые иды можно посмотреть по кнопке в истории изменений\n" .. fa.ICON_FA_BOLT .. "Необходимо учесть, что без Open Limit Adjuster или fastman92 limit adjuster под скины можно использовать только с 1 по 799 ид(которые не заняты)")
-				imgui.PopTextWrapPos()
-				imgui.EndTooltip()
-			end
 		local newskin = 1
 		for k, v in pairs(notduplicate) do
 			if tonumber(v) >= 312 then 
 				index = tonumber(v)
-				
 					if isModelInCdimage(index) then
-						if imgui.Button(""..index, imgui.ImVec2(30, 30)) then
-							testtextdraw(index)
+						if imgui.SelectButton(''..index, button_skin_new[v], imgui.ImVec2(34.5, 33)) then
+							if button_skin_new[v][0] then
+								if preview_method[0] then
+									spawnCharFunc(index)
+								else
+									testtextdraw(index)
+								end
+							else
+								if preview_method[0] then
+									delete_spawnCharFunc()
+								else
+									sampTextdrawDelete(2048)
+								end
+							end
 						end
 					else
-						imgui.ButtonDisabled(""..index, imgui.ImVec2(30, 30))
+						imgui.ButtonDisabled(""..index, imgui.ImVec2(34.5, 33))
 					end	
-					if newskin % 9 ~= 0 then
+					if newskin % 8 ~= 0 then
 						imgui.SameLine()
 					end
 					newskin = newskin + 1				
@@ -824,63 +1381,137 @@ function(one)
 			imgui.Text('')
 		end
 	end	
-	
+
 	if imgui.CollapsingHeader('Настройки') then
-		if config.settings.autoupdate == true then updatestatusonof = 'Включено' else updatestatusonof = 'Выключено' end
-		imgui.SetCursorPosX((imgui.GetWindowWidth() - 200) / 2)		
-		imgui.Text(string.format("Автообновление: %s", updatestatusonof))
-		imgui.SameLine()
-		if TBDonHomka.ToggleButton("Test2##2", autoupdateStatev) then 
-			config.settings.autoupdate = not config.settings.autoupdate
-			if config.settings.autoupdate then 
-				config.settings.autoupdate = true
-				savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")
-				autoupdate(updlink,'##nil',updlink)		
-			else 
-				config.settings.autoupdate = false
-				updatestatustest = ''					
-				savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")	
-			end 
-		end
-		
-		local buffer_size = ffi.sizeof(cmdbuffer)
-		imgui.SetCursorPosX((imgui.GetWindowWidth() - 230) / 2)
-		imgui.PushItemWidth(100)
-		if imgui.InputText('', cmdbuffer, buffer_size - 1, imgui.InputTextFlags.AutoSelectAll) then
-			config.settings.cmd = ffi.string(cmdbuffer)
-            -- savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")	
-        end
+		if imgui.TreeNodeStr("Для Arizona RP") then
+			if config.settings.arztextdrawactive == true then arztextdrawactivestatus = 'Включен' else arztextdrawactivestatus = 'Выключен' end
+			imgui.Text(string.format("Фейк текстдрав: %s", arztextdrawactivestatus))
 			if imgui.IsItemHovered() then
 				imgui.BeginTooltip()
 				imgui.PushTextWrapPos(600)
-					imgui.TextUnformatted('Чтобы изменить команду активации\nвведите команду без "/"')
+					imgui.TextUnformatted("Заменяет текстдрав скина и текст ида скина в инвентаре.")
 				imgui.PopTextWrapPos()
 				imgui.EndTooltip()
-			end		
-		imgui.PopItemWidth() 
-        imgui.SameLine()
-        if imgui.Button('Сохранить команду', imgui.ImVec2(130, 0)) then
-			config.settings.cmd = ffi.string(cmdbuffer)
-			savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")
-			sampUnregisterChatCommand('fskin')
-			sampRegisterChatCommand(config.settings.cmd, function() main_window[0] = not main_window[0] end)
-        if ffi.string(cmdbuffer) == nil or ffi.string(cmdbuffer) == '' or ffi.string(cmdbuffer) == ' ' or ffi.string(cmdbuffer):find('/.+') then
-				changecmdtext = 'Поле ввода пустое или содержит символ "/"\nВведите команду без "/" '
-				config.settings.cmd = 'fskin'
-				savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")
-			else
-				changecmdtext = ''
-			end
-        end
-		imgui.CenterText(""..changecmdtext)
-		imgui.SetCursorPosX((imgui.GetWindowWidth() - 325) / 2)
-		if imgui.Button('История\nизменений', imgui.ImVec2(100, 0)) then
-			changelog_window_state[0] = not changelog_window_state[0]
+			end	
+			imgui.SameLine()
+			if TBDonHomka.ToggleButton("Test3##3", arztextdrawactive) then 
+				config.settings.arztextdrawactive = not config.settings.arztextdrawactive
+				savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")	
+			end 
+			imgui.Separator()
+			imgui.TreePop()
 		end
-		imgui.SameLine()
-		if imgui.Button('Проверить\nобновление', imgui.ImVec2(100, 0)) then
-			autoupdate(updlink,'##nil',updlink)
-		end	
+		if imgui.TreeNodeStr("Предпросмотр скинов##settings") then
+			imgui.Text("Старый предпросмотр")
+			if imgui.IsItemHovered() then
+				imgui.BeginTooltip()
+				imgui.PushTextWrapPos(274)
+					imgui.TextUnformatted("Старый предпросмотр предпологает просмотр скина через текстдрав в плохом качестве, что является безопасным способом")
+				imgui.PopTextWrapPos()
+				imgui.EndTooltip()
+			end	
+			imgui.SameLine()
+				if TBDonHomka.ToggleButton("Test4##4", preview_method) then 
+					config.settings.preview_method = not config.settings.preview_method
+					savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")	
+				end 
+			imgui.SameLine()
+			imgui.Text("Новый предпросмотр")
+			if imgui.IsItemHovered() then
+				imgui.BeginTooltip()
+				imgui.PushTextWrapPos(274)
+					imgui.TextUnformatted("Новый предпросмотр предпологает просмотр скина через спавн скина и просмотр в игре, скин будет следовать за камерой, небезопасный способ")
+				imgui.PopTextWrapPos()
+				imgui.EndTooltip()
+			end
+			imgui.Separator()
+			imgui.TreePop()
+		end
+		if imgui.TreeNodeStr("Прочее##settings") then
+			if config.settings.autoupdate == true then updatestatusonof = 'Включено' else updatestatusonof = 'Выключено' end
+			imgui.SetCursorPosX((imgui.GetWindowWidth() - 200) / 2)		
+			imgui.Text(string.format("Автообновление: %s", updatestatusonof))
+			imgui.SameLine()
+			if TBDonHomka.ToggleButton("Test2##2", autoupdateStatev) then 
+				config.settings.autoupdate = not config.settings.autoupdate
+				if config.settings.autoupdate then 
+					config.settings.autoupdate = true
+					savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")
+					autoupdate(updlink,'##nil',updlink)		
+				else 
+					config.settings.autoupdate = false
+					updatestatustest = ''					
+					savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")	
+				end 
+			end
+
+			imgui.SetCursorPosX((imgui.GetWindowWidth() - 230) / 2)
+			imgui.PushItemWidth(100)
+			if imgui.InputTextWithHint('##Введите ник3', config.settings.cmd, cmdbuffer, ffi.sizeof(cmdbuffer) - 1, imgui.InputTextFlags.AutoSelectAll) then
+				config.settings.cmd = ffi.string(cmdbuffer)
+			end
+				if imgui.IsItemHovered() then
+					imgui.BeginTooltip()
+					imgui.PushTextWrapPos(600)
+						imgui.TextUnformatted('Чтобы изменить команду активации\nвведите команду без "/"')
+					imgui.PopTextWrapPos()
+					imgui.EndTooltip()
+				end		
+			imgui.PopItemWidth() 
+			imgui.SameLine()
+			if imgui.Button('Сохранить команду', imgui.ImVec2(130, 0)) then
+				config.settings.cmd = ffi.string(cmdbuffer)
+				savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")
+				sampUnregisterChatCommand('fskin')
+				sampRegisterChatCommand(config.settings.cmd, function() main_window[0] = not main_window[0] end)
+				if ffi.string(cmdbuffer) == nil or ffi.string(cmdbuffer) == '' or ffi.string(cmdbuffer) == ' ' or ffi.string(cmdbuffer):find('/.+') then
+					changecmdtext = 'Поле ввода пустое или содержит символ "/"\nВведите команду без "/" '
+					config.settings.cmd = 'fskin'
+					savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")
+				else
+					changecmdtext = ''
+				end
+			end
+			imgui.CenterText(""..changecmdtext)
+			imgui.SetCursorPosX((imgui.GetWindowWidth() - 230) / 2)
+			imgui.PushItemWidth(100)
+			if imgui.Combo('##style', selected, cArray, #array) then
+				config.settings.style.name = ''..array[selected[0] + 1]
+				config.settings.style.selected = selected[0]
+			if config.settings.style.name == 'CorporateGrey' then
+				CorporateGrey()
+			elseif config.settings.style.name == 'Standart' then
+				Standart()
+			elseif config.settings.style.name == 'Grey Theme' then
+				grey_theme()
+			elseif config.settings.style.name == 'Dark Red Theme' then
+				Dark_red_theme()
+			elseif config.settings.style.name == 'Dark Green Theme' then
+				darkgreentheme()
+			elseif config.settings.style.name == 'Red Theme' then
+				red_theme()
+			elseif config.settings.style.name == 'Purple Theme' then
+				Purple_theme()
+			end
+				savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")
+			end	
+			imgui.SameLine()
+			imgui.SetCursorPosY(imgui.GetCursorPosY() - 7)
+			imgui.SetCursorPosX((imgui.GetWindowWidth() + 30) / 2)		
+			imgui.Text(string.format("Текущий стиль:\n%s", config.settings.style.name))
+			imgui.PopItemWidth() 
+			imgui.Separator()
+			imgui.TreePop()	
+		end
+			imgui.SetCursorPosY(imgui.GetCursorPosY() + 7)
+			imgui.SetCursorPosX((imgui.GetWindowWidth() - 325) / 2)
+			if imgui.Button('История\nизменений', imgui.ImVec2(100, 0)) then
+				changelog_window_state[0] = not changelog_window_state[0]
+			end
+			imgui.SameLine()
+			if imgui.Button('Проверить\nобновление', imgui.ImVec2(100, 0)) then
+				autoupdate(updlink,'##nil',updlink)
+			end	
 			if imgui.IsItemHovered() then
 				imgui.BeginTooltip()
 				imgui.PushTextWrapPos(600)
@@ -888,28 +1519,24 @@ function(one)
 				imgui.PopTextWrapPos()
 				imgui.EndTooltip()
 			end				
-		imgui.SameLine()
-		if imgui.Button('Перезапустить\nскрипт', imgui.ImVec2(100, 0)) then
-			savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")
-			thisScript():reload()
-		end
+			imgui.SameLine()
+			if imgui.Button('Перезапустить\nскрипт', imgui.ImVec2(100, 0)) then
+				savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")
+				thisScript():reload()
+			end
 			if imgui.IsItemHovered() then
 				imgui.BeginTooltip()
 				imgui.PushTextWrapPos(600)
 					imgui.TextUnformatted("Нужно будет заново прописать команду активации скрипта")
 				imgui.PopTextWrapPos()
 				imgui.EndTooltip()
-			end		
-	end
-	imgui.Separator()
-	imgui.CenterText(""..updatestatustest)
-		if imgui.IsItemClicked(0) then
-			autoupdate(updlink,'##nil',updlink)
-		end 			
+			end				
+		end
+	imgui.CenterText(""..updatestatustest)			
 		if imgui.IsItemHovered() then
 			imgui.BeginTooltip()
 			imgui.PushTextWrapPos(600)
-			imgui.TextUnformatted("ЛКМ - Проверить обновления\nПКМ - Открыть группу в вк")
+			imgui.TextUnformatted("ПКМ - Открыть группу в вк")
 			imgui.PopTextWrapPos()
 			imgui.EndTooltip()
 		end		
@@ -919,7 +1546,9 @@ function(one)
 			-- imgui.PopStyleColor()
 		if not main_window[0] then 
 			fAlpha = 0.00
+			delete_spawnCharFunc()
 		end
+
 	imgui.End()
 end)
 
@@ -949,8 +1578,6 @@ function(two)
 	imgui.Begin(fa.ICON_FA_NEWSPAPER .. '##2', changelog_window_state, imgui.WindowFlags.NoResize + imgui.WindowFlags.NoCollapse, imgui.WindowFlags.AlwaysUseWindowPadding) --  + imgui.WindowFlags.NoScrollbar
 	imgui.SetCursorPosX((imgui.GetWindowWidth() - 374) / 2)  
 	imgui.Image(logo, imgui.ImVec2(374, 28))
-	-- imgui.SetScrollY(imgui.GetScrollMaxY())
-	-- imgui.TextWrapped(''..changelog)
 	imgui_text_color(''..changelog, true)
     if imgui.Link(fa.ICON_FA_LINK .. "Незанятые иды", "Файл откроется в браузере, ничего скачиваться не будет") then
         os.execute(('explorer.exe "%s"'):format(invalidID))
@@ -1045,11 +1672,11 @@ function main()
 	end	
 	if config.settings.cmd == 'fskin' then
 		sampRegisterChatCommand('fskin', function(param) 
-			local id, skinId = string.match(param, "(%d+) (%d+)") -- %d+ - Это числа
-			if id == nil or skinId == "" then -- Если ID - не вписан и skinId "" - пусто, то
+			local id, skinId = string.match(param, "(%d+) (%d+)")
+			if id == nil or skinId == "" then
 				main_window[0] = not main_window[0]
 				Alpha()
-			else -- Иначе
+			else
 				lua_thread.create(function()
 				   changeSkin(id, skinId)
 				end)
@@ -1059,11 +1686,11 @@ function main()
 	else
 		sampUnregisterChatCommand('fskin')
 		sampRegisterChatCommand(config.settings.cmd, function(param)
-			local id, skinId = string.match(param, "(%d+) (%d+)") -- %d+ - Это числа
-			if id == nil or skinId == "" then -- Если ID - не вписан и skinId "" - пусто, то
+			local id, skinId = string.match(param, "(%d+) (%d+)")
+			if id == nil or skinId == "" then
 				main_window[0] = not main_window[0]
 				Alpha()
-			else -- Иначе
+			else
 				lua_thread.create(function()
 				   changeSkin(id, skinId)
 				end)
@@ -1077,7 +1704,40 @@ function main()
 	else
 		changelog_window_state[0] = false
 	end
-	wait(-1)
+	while true do wait(0)
+		if rarw then
+		resX, resY = getScreenResolution()
+		local x, y, z = convertScreenCoordsToWorld3D(resX / 3.5, resY / 1.6, 2.5)
+				local camCoordX, camCoordY, camCoordZ = getActiveCameraCoordinates()
+				local targetCamX, targetCamY, targetCamZ = getActiveCameraPointAt()
+				local angle = getHeadingFromVector2d(targetCamX - camCoordX, targetCamY - camCoordY)
+		setCharHeading(peshPed, angle + 220)
+		setCharCoordinates(peshPed, x, y, z - 0.74)
+		end
+	end
+	-- wait(-1)
+end
+
+rarw = false
+function spawnCharFunc(modelID)
+	requestModel(modelID)
+	loadAllModelsNow()
+	local x, y, z = getOffsetFromCharInWorldCoords(playerPed, 0.74, 1.4, -0.55)
+	peshPed = createChar(24, modelID, x, y, z)
+	freezeCharPosition(peshPed, true)
+	rarw = true
+	markModelAsNoLongerNeeded(modelID)
+end
+
+function delete_spawnCharFunc()
+    for k, v in ipairs(getAllChars()) do
+        local res, id = sampGetPlayerIdByCharHandle(v)
+        if not res then
+            deleteChar(v)
+        end
+    end
+	rarw = false
+endarw = false
 end
 
 function changeSkin(id, skinId)
@@ -1096,13 +1756,26 @@ function testtextdraw(arg)
 	sampTextdrawSetBoxColorAndSize(2048, true, 0xFFFFFF00, 250.0, 250.0)
 	sampTextdrawSetStyle(2048, 5) 
 	sampTextdrawSetModelRotationZoomVehColor(2048, tonumber(arg), 0.0, 0.0, 0.0, 1.0, 0, 0)
-	lua_thread.create(function()
-		wait(1574)
-		sampTextdrawDelete(2048)
-	end)
 end
 
 if lsampev then
+	function sampev.onShowTextDraw(id, data)
+		if config.settings.arztextdrawactive then
+			for q,w in pairs(config.skins) do
+				for k,v in pairs(config.skinslast) do
+					local nametoid = select(2, sampGetPlayerIdByCharHandle(PLAYER_PED))
+					namet = sampGetPlayerNickname(nametoid)
+					if q == namet and data.modelId == v then
+						data.modelId = w
+					end
+					if q == namet and data.text:find('ID:'..v) then
+						data.text = 'ID:'..w
+					end
+				end	
+			end	
+		end
+		return {id, data}	
+	end
 	function sampev.onPlayerStreamIn(playerId, team, model, position, rotation, color, fightingStyle)
 		for k,v in pairs(config.skins) do
 			local nametoid = sampGetPlayerIdByNickname(k)
@@ -1132,6 +1805,19 @@ if lsampev then
 	end
 end
 
+function getGenderBySkinId(skinId) -- by Quasper
+local skins = {male = {0, 1, 2, 3, 4, 5, 6, 7, 8, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 32, 33, 34, 35, 36, 37, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 57, 58, 59, 60, 61, 62, 66, 67, 68, 70, 71, 72, 73, 78, 79, 80, 81, 82, 83, 84, 86, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 132, 133, 134, 135, 136, 137, 142, 143, 144, 146, 147, 149, 153, 154, 155, 156, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 170, 171, 173, 174, 175, 176, 177, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 200, 202, 203, 204, 206, 208, 209, 210, 212, 213, 217, 220, 221, 222, 223, 227, 228, 229, 230, 234, 235, 236, 239, 240, 241, 242, 247, 248, 249, 250, 252, 253, 254, 255, 258, 259, 260, 261, 262, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295, 296, 297, 299, 300, 301, 302, 303, 304, 305, 310, 311}, 
+female = {9, 10, 11, 12, 13, 31, 38, 39, 40, 41, 53, 54, 55, 56, 63, 64, 65, 69, 75, 76, 77, 85, 87, 88, 89, 90, 91, 92, 93, 129, 130, 131, 138, 139, 140, 141, 145, 148, 150, 151, 152, 157, 169, 172, 178, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 201, 205, 207, 211, 214, 215, 216, 218, 219, 224, 225, 226, 231, 232, 233, 237, 238, 243, 244, 245, 246, 251, 256, 257, 263, 298, 306, 307, 308, 309}}
+for k, v in pairs(skins) do
+  for m, n in pairs(v) do
+      if n == skinId then
+        return k
+      end
+  end
+end
+  return 'Skin not found'
+end
+
 function onWindowMessage(msg, wparam, lparam)
 	if msg == 0x100 or msg == 0x101 then
 		if wparam == vkeys.VK_ESCAPE and  main_window[0] and not isPauseMenuActive() then
@@ -1146,6 +1832,7 @@ end
 function onScriptTerminate(LuaScript, quitGame)
     if LuaScript == thisScript() and not quitGame then
         showCursor(false, false)
+		delete_spawnCharFunc()
     end
 end
 
