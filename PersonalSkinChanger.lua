@@ -1711,7 +1711,7 @@ function main()
 	end
 	while true do wait(0)
 		if rarw then
-		resX, resY = getScreenResolution()
+		local resX, resY = getScreenResolution()
 		local x, y, z = convertScreenCoordsToWorld3D(resX / 3.5, resY / 1.6, 2.5)
 				local camCoordX, camCoordY, camCoordZ = getActiveCameraCoordinates()
 				local targetCamX, targetCamY, targetCamZ = getActiveCameraPointAt()
@@ -1739,8 +1739,9 @@ function delete_spawnCharFunc()
     for k, v in ipairs(getAllChars()) do
         local res, id = sampGetPlayerIdByCharHandle(v)
         if not res then
-			local my_pos = {getCharCoordinates(playerPed)}
-			local other_pos = {getCharCoordinates(v)}
+			local resX, resY = getScreenResolution()
+			local my_pos = {getCharCoordinates(v)}
+			local other_pos = {convertScreenCoordsToWorld3D(resX / 3.5, resY / 1.6, 2.5)}
 			if getDistanceBetweenCoords3d(my_pos[1], my_pos[2], my_pos[3], other_pos[1], other_pos[2], other_pos[3]) < 1.5 then
 				deleteChar(v)
 			end
