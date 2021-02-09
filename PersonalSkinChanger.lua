@@ -4,8 +4,8 @@ script_description("The usual fakeskin on hooks, mimgui. Sets an individual skin
 script_url("https://vk.com/dmitriyewichmods")
 script_dependencies("ffi","encoding", "mimgui", "vkeys", "ziplib", "lfs", "faicons", "fAwesome5", "samp.events")
 script_properties('work-in-pause')
-script_version('1.1')
-script_version_number(11)
+script_version('1.1.1')
+script_version_number(111)
 
 require("moonloader")
 local dlstatus = require "moonloader".download_status
@@ -71,6 +71,8 @@ changelog = [[
 {ccccd3}Добавлено отображение текущего/последнего скина при наведении на инпут ид скина. Добавлена функция смены скина без привзяки - /(ваша команда активации окна PSC(по умолчанию /fskin)) (ID) (IDskin). Добавлено закрытие окна PSC на ESC.
 	{FFFFFF}v1.1
 {ccccd3}Изменен стиль, добавлены альтернативные стили, можно изменить в настройках. Добавлено гендерное разделение стандартных скинов. Добавлен новый вид предпросмотра скинов(переключить можно в Настройки - Предпросмотр скинов). Добавлен хук на подмену скина в инвентаре аризоны, ид одежды так же меняется(включается в настройках).
+	{FFFFFF}v1.1.1
+{ccccd3}Фикс удаления скина. Добавлена коллизия для нового вида предпросмотра.
 ]]
 
 local function NameModel(x)
@@ -1267,6 +1269,7 @@ function(one)
 						if imgui.SelectButton(''..i, button_skin[i], imgui.ImVec2(34.5, 33)) then
 							if button_skin[i][0] then
 								if preview_method[0] then
+									delete_spawnCharFunc()
 									spawnCharFunc(i)
 								else
 									testtextdraw(i)
@@ -1302,6 +1305,7 @@ function(one)
 					if imgui.SelectButton(''..i, button_skin[i], imgui.ImVec2(34.5, 33)) then
 						if button_skin[i][0] then
 							if preview_method[0] then
+								delete_spawnCharFunc()
 								spawnCharFunc(i)
 							else
 								testtextdraw(i)
@@ -1357,6 +1361,7 @@ function(one)
 						if imgui.SelectButton(''..index, button_skin_new[v], imgui.ImVec2(34.5, 33)) then
 							if button_skin_new[v][0] then
 								if preview_method[0] then
+									delete_spawnCharFunc()
 									spawnCharFunc(index)
 								else
 									testtextdraw(index)
@@ -1725,6 +1730,7 @@ function spawnCharFunc(modelID)
 	local x, y, z = getOffsetFromCharInWorldCoords(playerPed, 0.74, 1.4, -0.55)
 	peshPed = createChar(24, modelID, x, y, z)
 	freezeCharPosition(peshPed, true)
+	setCharCollision(peshPed, true)
 	rarw = true
 	markModelAsNoLongerNeeded(modelID)
 end
@@ -1733,7 +1739,11 @@ function delete_spawnCharFunc()
     for k, v in ipairs(getAllChars()) do
         local res, id = sampGetPlayerIdByCharHandle(v)
         if not res then
-            deleteChar(v)
+			local my_pos = {getCharCoordinates(playerPed)}
+			local other_pos = {getCharCoordinates(v)}
+			if getDistanceBetweenCoords3d(my_pos[1], my_pos[2], my_pos[3], other_pos[1], other_pos[2], other_pos[3]) < 1.5 then
+				deleteChar(v)
+			end
         end
     end
 	rarw = false
