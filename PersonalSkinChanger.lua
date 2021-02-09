@@ -1742,13 +1742,12 @@ function delete_spawnCharFunc()
 			local resX, resY = getScreenResolution()
 			local my_pos = {getCharCoordinates(v)}
 			local other_pos = {convertScreenCoordsToWorld3D(resX / 3.5, resY / 1.6, 2.5)}
-			if getDistanceBetweenCoords3d(my_pos[1], my_pos[2], my_pos[3], other_pos[1], other_pos[2], other_pos[3]) < 1.5 then
+			if getDistanceBetweenCoords3d(my_pos[1], my_pos[2], my_pos[3], other_pos[1], other_pos[2], other_pos[3]) < 1.0 then
 				deleteChar(v)
+				rarw = false
 			end
         end
     end
-	rarw = false
-endarw = false
 end
 
 function changeSkin(id, skinId)
