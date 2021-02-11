@@ -4,8 +4,8 @@ script_description("The usual fakeskin on hooks, mimgui. Sets an individual skin
 script_url("https://vk.com/dmitriyewichmods")
 script_dependencies("ffi","encoding", "mimgui", "vkeys", "ziplib", "lfs", "faicons", "fAwesome5", "samp.events")
 script_properties('work-in-pause')
-script_version('1.1.1')
-script_version_number(111)
+script_version('1.1.2')
+script_version_number(112)
 
 require("moonloader")
 local dlstatus = require "moonloader".download_status
@@ -356,7 +356,7 @@ else
 end
 
 function sampGetPlayerIdByNickname(nick)
-    local _, myid = sampGetPlayerIdByCharHandle(playerPed)
+    local _, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
     if tostring(nick) == sampGetPlayerNickname(myid) then return myid end
     for i = 0, 1000 do if sampIsPlayerConnected(i) and sampGetPlayerNickname(i) == tostring(nick) then return i end end
 end
@@ -1062,7 +1062,7 @@ main_window = imgui.new.bool(false) -- основное окно, по-умол�
 local autoupdateStatev = imgui.new.bool(config.settings.autoupdate) --  автообновление
 arztextdrawactive = imgui.new.bool(config.settings.arztextdrawactive)
 preview_method = imgui.new.bool(config.settings.preview_method)
-changelog_window_state = imgui.new.bool(false) -- окно истории изменений
+changelog_window_state = imgui.new.bool(config.settings.changelog) -- окно истории изменений
 local nick = imgui.new.char[128]('')
 local idskin = imgui.new.char[128]('')
 local cmdbuffer = imgui.new.char[128]('')
@@ -1387,6 +1387,9 @@ function(one)
 		end
 	end	
 
+	if imgui.CollapsingHeader('Одежда CJ') then
+		imgui.Text("Скоро!")
+	end
 	if imgui.CollapsingHeader('Настройки') then
 		if imgui.TreeNodeStr("Для Arizona RP") then
 			if config.settings.arztextdrawactive == true then arztextdrawactivestatus = 'Включен' else arztextdrawactivestatus = 'Выключен' end
@@ -1557,6 +1560,36 @@ function(one)
 	imgui.End()
 end)
 
+
+	
+imgui.OnFrame(function() return changelog_window_state[0] and isSampfuncsLoaded() and isSampLoaded() and 
+not isPauseMenuActive() and not sampIsScoreboardOpen() end,
+	-- imgui.OnFrame(function() return changelog_window_state[0] end,
+	
+	function(two)
+		imgui.PushStyleVarFloat(imgui.StyleVar.Alpha, fAlpha)
+		local sizeX, sizeY = getScreenResolution()
+		imgui.SetNextWindowPos(imgui.ImVec2(sizeX / 2, sizeY / 2), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))    
+		imgui.SetNextWindowSize(imgui.ImVec2(400, 460), imgui.Cond.FirstUseEver, imgui.NoResize) 
+		imgui.Begin(fa.ICON_FA_NEWSPAPER .. '##2', changelog_window_state, imgui.WindowFlags.NoResize + imgui.WindowFlags.NoCollapse, imgui.WindowFlags.AlwaysUseWindowPadding) --  + imgui.WindowFlags.NoScrollbar
+		imgui.SetCursorPosX((imgui.GetWindowWidth() - 374) / 2)  
+		imgui.Image(logo, imgui.ImVec2(374, 28))
+		imgui_text_color(''..changelog, true)
+		if imgui.Link(fa.ICON_FA_LINK .. "Незанятые иды", "Файл откроется в браузере, ничего скачиваться не будет") then
+			os.execute(('explorer.exe "%s"'):format(invalidID))
+		end
+		if changelog_window_state[0] == false then 
+			config.settings.changelog = false
+			savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")
+		end
+					-- imgui.PopStyleColor()
+		if not changelog_window_state[0] then 
+			fAlpha = 0.00
+			delete_spawnCharFunc()
+		end
+		imgui.End()
+	end)
+
 	function Alpha()
 		lua_thread.create(function()
 			if main_window[0] or changelog_window_state[0] then 
@@ -1567,105 +1600,86 @@ end)
 					until( fAlpha >= 1.00 )
 				
 			end
-			if not main_window[0] then 
+			if not main_window[0] and not changelog_window_state[0] then 
 				fAlpha = 0.00
-			end	
+			end
 		end)	
 	end
 	
-imgui.OnFrame(function() return changelog_window_state[0] and isSampfuncsLoaded() and isSampLoaded() and 
-not isPauseMenuActive() and sampIsChatVisible() and not sampIsScoreboardOpen() end,
-function(two)
-	imgui.PushStyleVarFloat(imgui.StyleVar.Alpha, fAlpha)
-	local sizeX, sizeY = getScreenResolution()
-	imgui.SetNextWindowPos(imgui.ImVec2(sizeX / 2, sizeY / 2), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))    
-    imgui.SetNextWindowSize(imgui.ImVec2(400, 460), imgui.Cond.FirstUseEver, imgui.NoResize) 
-	imgui.Begin(fa.ICON_FA_NEWSPAPER .. '##2', changelog_window_state, imgui.WindowFlags.NoResize + imgui.WindowFlags.NoCollapse, imgui.WindowFlags.AlwaysUseWindowPadding) --  + imgui.WindowFlags.NoScrollbar
-	imgui.SetCursorPosX((imgui.GetWindowWidth() - 374) / 2)  
-	imgui.Image(logo, imgui.ImVec2(374, 28))
-	imgui_text_color(''..changelog, true)
-    if imgui.Link(fa.ICON_FA_LINK .. "Незанятые иды", "Файл откроется в браузере, ничего скачиваться не будет") then
-        os.execute(('explorer.exe "%s"'):format(invalidID))
-    end
-	if changelog_window_state[0] == false then config.settings.changelog = false
-		savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")
-	end
-	imgui.End()
-end)	
-function imgui.Link(label, description)
-    local size = imgui.CalcTextSize(label)
-    local p = imgui.GetCursorScreenPos()
-    local p2 = imgui.GetCursorPos()
-    local result = imgui.InvisibleButton(label, size)
-    imgui.SetCursorPos(p2)
-    if imgui.IsItemHovered() then
-        if description then
-            imgui.BeginTooltip()
-            imgui.PushTextWrapPos(600)
-            imgui.TextUnformatted(description)
-            imgui.PopTextWrapPos()
-            imgui.EndTooltip()
-        end
-        imgui.TextColored(imgui.ImVec4(0, 0.5, 1, 1), label)
-    else
-        imgui.TextColored(imgui.ImVec4(0, 0.3, 0.8, 1), label)
-    end
-    return result
-end
-
-function imgui.TextQuestion(label, description)
-    imgui.TextDisabled(label)
-    if imgui.IsItemHovered() then
-        imgui.BeginTooltip()
-            imgui.PushTextWrapPos(600)
-                imgui.TextUnformatted(description)
-            imgui.PopTextWrapPos()
-        imgui.EndTooltip()
-    end
-end
-
-LastActiveTime = {}
-LastActive = {}
-TBDonHomka.ToggleButton = function(str_id, bool) --Toggle Button: by DonHomka mimgui_addons
-	local rBool = false
-
-	local function ImSaturate(f)
-		return f < 0.0 and 0.0 or (f > 1.0 and 1.0 or f)
-	end
-	
-	local p = imgui.GetCursorScreenPos()
-	local draw_list = imgui.GetWindowDrawList()
-
-	local height = imgui.GetTextLineHeightWithSpacing() * TBDonHomka._SETTINGS.ToggleButton.scale
-	local width = height * 1.2
-	local radius = height * 0.50
-
-	if imgui.InvisibleButton(str_id, imgui.ImVec2(width + radius, height)) then
-		bool[0] = not bool[0]
-		rBool = true
-		LastActiveTime[tostring(str_id)] = os.clock()
-		LastActive[tostring(str_id)] = true
-	end
-
-	local t = bool[0] and 1.0 or 0.0
-
-	if LastActive[tostring(str_id)] then
-		local time = os.clock() - LastActiveTime[tostring(str_id)]
-		if time <= TBDonHomka._SETTINGS.ToggleButton.AnimSpeed then
-			local t_anim = ImSaturate(time / TBDonHomka._SETTINGS.ToggleButton.AnimSpeed)
-			t = bool[0] and t_anim or 1.0 - t_anim
+	function imgui.Link(label, description)
+		local size = imgui.CalcTextSize(label)
+		local p = imgui.GetCursorScreenPos()
+		local p2 = imgui.GetCursorPos()
+		local result = imgui.InvisibleButton(label, size)
+		imgui.SetCursorPos(p2)
+		if imgui.IsItemHovered() then
+			if description then
+				imgui.BeginTooltip()
+				imgui.PushTextWrapPos(600)
+				imgui.TextUnformatted(description)
+				imgui.PopTextWrapPos()
+				imgui.EndTooltip()
+			end
+			imgui.TextColored(imgui.ImVec4(0, 0.5, 1, 1), label)
 		else
-			LastActive[tostring(str_id)] = false
+			imgui.TextColored(imgui.ImVec4(0, 0.3, 0.8, 1), label)
+		end
+		return result
+	end
+
+	function imgui.TextQuestion(label, description)
+		imgui.TextDisabled(label)
+		if imgui.IsItemHovered() then
+			imgui.BeginTooltip()
+				imgui.PushTextWrapPos(600)
+					imgui.TextUnformatted(description)
+				imgui.PopTextWrapPos()
+			imgui.EndTooltip()
 		end
 	end
 
-	local col_bg = imgui.ColorConvertFloat4ToU32(TBDonHomka._SETTINGS.ToggleButton.colors[bool[0] and 3 or 4])
+	LastActiveTime = {}
+	LastActive = {}
+	TBDonHomka.ToggleButton = function(str_id, bool) --Toggle Button: by DonHomka mimgui_addons
+		local rBool = false
 
-	draw_list:AddRectFilled(imgui.ImVec2(p.x + (radius * 0.65), p.y + (height / 6)), imgui.ImVec2(p.x + (radius * 0.65) + width, p.y + (height - (height / 6))), col_bg, 10.0)
-	draw_list:AddCircleFilled(imgui.ImVec2(p.x + (radius * 1.3) + t * (width - (radius * 1.3)), p.y + radius), radius - 1.0, imgui.ColorConvertFloat4ToU32(TBDonHomka._SETTINGS.ToggleButton.colors[bool[0] and  1 or 2]))
+		local function ImSaturate(f)
+			return f < 0.0 and 0.0 or (f > 1.0 and 1.0 or f)
+		end
+		
+		local p = imgui.GetCursorScreenPos()
+		local draw_list = imgui.GetWindowDrawList()
 
-	return rBool
-end
+		local height = imgui.GetTextLineHeightWithSpacing() * TBDonHomka._SETTINGS.ToggleButton.scale
+		local width = height * 1.2
+		local radius = height * 0.50
+
+		if imgui.InvisibleButton(str_id, imgui.ImVec2(width + radius, height)) then
+			bool[0] = not bool[0]
+			rBool = true
+			LastActiveTime[tostring(str_id)] = os.clock()
+			LastActive[tostring(str_id)] = true
+		end
+
+		local t = bool[0] and 1.0 or 0.0
+
+		if LastActive[tostring(str_id)] then
+			local time = os.clock() - LastActiveTime[tostring(str_id)]
+			if time <= TBDonHomka._SETTINGS.ToggleButton.AnimSpeed then
+				local t_anim = ImSaturate(time / TBDonHomka._SETTINGS.ToggleButton.AnimSpeed)
+				t = bool[0] and t_anim or 1.0 - t_anim
+			else
+				LastActive[tostring(str_id)] = false
+			end
+		end
+
+		local col_bg = imgui.ColorConvertFloat4ToU32(TBDonHomka._SETTINGS.ToggleButton.colors[bool[0] and 3 or 4])
+
+		draw_list:AddRectFilled(imgui.ImVec2(p.x + (radius * 0.65), p.y + (height / 6)), imgui.ImVec2(p.x + (radius * 0.65) + width, p.y + (height - (height / 6))), col_bg, 10.0)
+		draw_list:AddCircleFilled(imgui.ImVec2(p.x + (radius * 1.3) + t * (width - (radius * 1.3)), p.y + radius), radius - 1.0, imgui.ColorConvertFloat4ToU32(TBDonHomka._SETTINGS.ToggleButton.colors[bool[0] and  1 or 2]))
+
+		return rBool
+	end
 end
 
 function main()
@@ -1704,11 +1718,13 @@ function main()
 		sampSetClientCommandDescription(config.settings.cmd, (string.format(u8:decode'Активация/деактивация окна %s, /%s id IdSkin(смена скина без привязки), Файл: %s', thisScript().name, config.settings.cmd, thisScript().filename)))
 	end	
 
-	if config.settings.changelog == true then 
+	if config.settings.changelog == true then
 		changelog_window_state[0] = true
-	else
+		Alpha()
+		else
 		changelog_window_state[0] = false
 	end
+
 	while true do wait(0)
 		if rarw then
 		local resX, resY = getScreenResolution()
@@ -1727,7 +1743,7 @@ rarw = false
 function spawnCharFunc(modelID)
 	requestModel(modelID)
 	loadAllModelsNow()
-	local x, y, z = getOffsetFromCharInWorldCoords(playerPed, 0.74, 1.4, -0.55)
+	local x, y, z = getOffsetFromCharInWorldCoords(PLAYER_PED, 0.74, 1.4, -0.55)
 	peshPed = createChar(24, modelID, x, y, z)
 	freezeCharPosition(peshPed, true)
 	setCharCollision(peshPed, true)
@@ -1830,10 +1846,28 @@ end
 
 function onWindowMessage(msg, wparam, lparam)
 	if msg == 0x100 or msg == 0x101 then
-		if wparam == vkeys.VK_ESCAPE and  main_window[0] and not isPauseMenuActive() then
+		if wparam == vkeys.VK_ESCAPE and  main_window[0] and changelog_window_state[0] and not isPauseMenuActive() then
+			consumeWindowMessage(true, false)
+			if msg == 0x101 then
+				changelog_window_state[0] = false
+				if config.settings.changelog == true then
+					config.settings.changelog = false
+					savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")
+				end
+			end
+			elseif wparam == vkeys.VK_ESCAPE and main_window[0] and not isPauseMenuActive() then
 			consumeWindowMessage(true, false)
 			if msg == 0x101 then
 				main_window[0] = false
+			end
+			elseif wparam == vkeys.VK_ESCAPE and changelog_window_state[0] and not isPauseMenuActive() then
+			consumeWindowMessage(true, false)
+			if msg == 0x101 then
+				changelog_window_state[0] = false
+				if config.settings.changelog == true then
+					config.settings.changelog = false
+					savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")
+				end
 			end
 		end
 	end
@@ -1841,7 +1875,7 @@ end
 
 function onScriptTerminate(LuaScript, quitGame)
     if LuaScript == thisScript() and not quitGame then
-        showCursor(false, false)
+        -- showCursor(false, false)
 		delete_spawnCharFunc()
     end
 end
