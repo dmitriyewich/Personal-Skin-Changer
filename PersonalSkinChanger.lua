@@ -73,6 +73,8 @@ changelog = [[
 {ccccd3}Изменен стиль, добавлены альтернативные стили, можно изменить в настройках. Добавлено гендерное разделение стандартных скинов. Добавлен новый вид предпросмотра скинов(переключить можно в Настройки - Предпросмотр скинов). Добавлен хук на подмену скина в инвентаре аризоны, ид одежды так же меняется(включается в настройках).
 	{FFFFFF}v1.1.1
 {ccccd3}Фикс удаления скина. Добавлена коллизия для нового вида предпросмотра.
+	{FFFFFF}v1.1.2
+{ccccd3}Микрофиксы
 ]]
 
 local function NameModel(x)
@@ -1583,9 +1585,8 @@ not isPauseMenuActive() and not sampIsScoreboardOpen() end,
 			savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")
 		end
 					-- imgui.PopStyleColor()
-		if not changelog_window_state[0] then 
+		if not changelog_window_state[0] and not main_window[0] then 
 			fAlpha = 0.00
-			delete_spawnCharFunc()
 		end
 		imgui.End()
 	end)
