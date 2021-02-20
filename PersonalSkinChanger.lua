@@ -1948,14 +1948,14 @@ if lziplib then
 		file_path = getWorkingDirectory() .. "\\" .. script_name ..".zip"
 
 		if doesFileExist(file_path) then
-			print("Распаковка архива: " .. script_name)
+			print(u8:decode"Распаковка архива: " .. script_name)
 			local extract_des = string.format("%s\\%s",getWorkingDirectory(),script_name)
 			ziplib.zip_extract(file_path,extract_des,nil,nil)
 			MoveFiles(extract_des,getWorkingDirectory().."\\lib")
 			os.remove(file_path)
-			print("Распаковка прошла успешно, распакован архив: " .. script_name)
+			print(u8:decode"Распаковка прошла успешно, распакован архив: " .. script_name)
 		else
-			print("Файлы не найдет, перезапустите скрипт.")
+			print(u8:decode"Файлы не найдет, перезапустите скрипт.")
 		end
 	end
 end
@@ -1980,7 +1980,7 @@ if llfs then
 				end
 				if doesFileExist(dest_file) then
 					os.remove(main_file)
-					print("Невозможно удалить файл " .. dest_file)
+					print(u8:decode"Невозможно удалить файл " .. dest_file)
 				else
 					os.rename(main_file,dest_file)
 				end
@@ -1994,7 +1994,7 @@ end
 function checklibs()
 	if not lsampev or not limgui or not lfaicons or not lfa or not llfs or not lziplib then	  
 		lua_thread.create(function()
-			print('Подгрузка необходимых библиотек..')
+			print(u8:decode'Подгрузка необходимых библиотек..')
 			if not lziplib then
 				downloadFile('ziplib', getWorkingDirectory()..'\\lib\\ziplib.dll', 'https://github.com/dmitriyewich/Personal-Skin-Changer/raw/main/lib/ziplib.dll')
 				while not doesFileExist(getWorkingDirectory()..'\\lib\\ziplib.dll') do wait(0) end
@@ -2045,7 +2045,7 @@ function checklibs()
 			else
 				wait(0)
 			end
-			print('Подгрузка библиотек успешно завершена. Перезагрузка скриптов...')
+			print(u8:decode'Подгрузка библиотек успешно завершена. Перезагрузка скриптов...')
 			wait(1000)
 			reloadScripts()
 		end)
@@ -2056,13 +2056,13 @@ end
 
 function downloadFile(name, path, link)
 	if not doesFileExist(path) then
-		print('Скачивание файла {006AC2}«'..name..'»')
+		print(u8:decode'Скачивание файла {006AC2}«'..name..'»')
 		downloadUrlToFile(link, path, function(id, status, p1, p2)
 			if status == dlstatus.STATUSEX_ENDDOWNLOAD then
 				if doesFileExist(path) then
-					print('Файл {006AC2}«'..name..'»{FFFFFF} загружен!')
+					print(u8:decode'Файл {006AC2}«'..name..u8:decode'»{FFFFFF} загружен!')
 				else
-					print('Не удалось загрузить файл {006AC2}«'..name..'»')
+					print(u8:decode'Не удалось загрузить файл {006AC2}«'..name..'»')
 				end
 			end
 		end)
