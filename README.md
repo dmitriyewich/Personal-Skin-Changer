@@ -4,7 +4,6 @@
 
 Активация: /fskin(можно сменить в настройках).
 
-Требования: MoonLoader, mimgui, SAMP.lua, fAwesome5, fa-icons, LuaFileSystem , ziplib (если этих библиотек у вас нет скрипт сам их скачает).
+Требования: MoonLoader, mimgui, SAMP.lua, PedFuncs(опционально).
 
 Установка: .lua в moonloader
-p.s. Присутствует автообновление, по умолчанию выключено.
