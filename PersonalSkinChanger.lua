@@ -20,7 +20,7 @@ encoding.default = 'CP1251'
 u8 = encoding.UTF8
 CP1251 = encoding.CP1251
 
-local lpedfuncs, pedfuncs = pcall(ffi.load, 'PedFuncs.asi') assert(lpedfuncs, 'Library \'PedFuncs.asi\' not found.')
+local lpedfuncs, pedfuncs = pcall(ffi.load, 'PedFuncs.asi')
 
 ffi.cdef[[
 	int Ext_GetPedRemap(uint32_t, int index);
