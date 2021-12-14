@@ -388,7 +388,7 @@ function NameModel(x)
 
 end
 
-local ui_meta = { -- by Cosmo https://www.blast.hk/threads/111268/
+local ui_meta = { -- by Cosmo
     __index = function(self, v)
         if v == "switch" then
             local switch = function()
@@ -1039,7 +1039,7 @@ local main_frame = imgui.OnFrame(
 					SetRwObjectAlpha(ped_add, RwSkinAlpha[0])
 				end
 				imgui.PopItemWidth()
-				--
+
 				imgui.SetCursorPosY(imgui.GetCursorPosY() + 4)
 				imgui.Text((config.settings.language == "RU" and 'Скорость поворота  ' or 'Rotation speed  '))
 				if imgui.IsItemHovered() then
@@ -1197,7 +1197,6 @@ function imgui.PedFuncs(handle, addr_bool)
 		end
 		local remap = pedfuncs.Ext_GetPedRemap(getCharPointer(handle), index)
 		imgui.SetCursorPosY(imgui.GetCursorPosY() + 4)
-		-- local model_Id = getCharModel(handle)
 		imgui.Text("Assistant for PedFuncs  ")
 		imgui.SameLine()
 		imgui.SetCursorPosY(imgui.GetCursorPosY() - 4)
@@ -1248,7 +1247,7 @@ function imgui.PedFuncs(handle, addr_bool)
 		end
 		if not preview_skin and not doesCharExist(peshPed) and addr_bool then
 			imgui.SetCursorPosY(imgui.GetCursorPosY() + 4)
-			imgui.Text("Привязка текстур  ")
+			imgui.Text(config.settings.language == "RU" and "Привязка текстур  " or "Attaching remaps  ")
 			imgui.SameLine()
 			imgui.SetCursorPosY(imgui.GetCursorPosY() - 4)
 			imgui.SetCursorPosX(152)
@@ -1257,7 +1256,6 @@ function imgui.PedFuncs(handle, addr_bool)
 				local nick_pedfuncs = ffi.string(nick) == "" and mynick_pedfuncs or ffi.string(nick)
 				if config.pedfuncs[''..nick_pedfuncs] ~= nil then
 					config.pedfuncs[''..nick_pedfuncs]['index'..index] = tonumber(remap)
-				-- config.pedfuncs[""..nick_pedfuncs] = {"F"}
 					savejson(convertTableToJsonString(config), "moonloader/config/PersonalSkinChanger.json")
 					else
 					lua_thread.create(function()
@@ -1270,12 +1268,11 @@ function imgui.PedFuncs(handle, addr_bool)
 			end
 			imgui.TutorialHint('but_pedfuncs1', config.settings.language == "RU" and 'Скин должен быть привязан к нику!' or 'Skin must be attached to the nickname!', but_pedfuncs, true)
 		end
-		-- print()
 	end
 end
 
 
-function imgui.TutorialHint(str_id, text, bool, hideOnClick) -- https://www.blast.hk/threads/13380/post-657559
+function imgui.TutorialHint(str_id, text, bool, hideOnClick) -- by Cosmo https://www.blast.hk/threads/13380/post-657559
     local p_orig = imgui.GetCursorPos()
     if hideOnClick == nil then hideOnClick = true end
 
