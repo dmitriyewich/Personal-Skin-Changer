@@ -4,8 +4,8 @@ script_description("The usual fakeskin on hooks, mimgui. Sets an individual skin
 script_url("https://vk.com/dmitriyewichmods")
 script_dependencies("ffi", "encoding", "mimgui", "vkeys", "samp.events", 'windows.message')
 script_properties('work-in-pause')
-script_version('2.1')
-script_version_number(210)
+script_version('2.1.1')
+script_version_number(211)
 
 local lffi, ffi = pcall(require, 'ffi')
 local lmemory, memory = pcall(require, 'memory')
@@ -107,6 +107,8 @@ changelog = [[
 		Прозрачность и скорость поворота скина(до смены скина или спавна). Анимацию поворота можно отключить.
 		Сохранение ремапа для PedFuncs(если он есть и скин привязан к нику).
 	- Микрофиксы
+		v2.1.1
+	- Микрофиксы Assistant for PedFuncs(не исправлено если индекс 0 и репам -1, то другие индексы не изменяют ремап, пробую исправить)
 ]]
 
 local function isarray(t, emptyIsObject)
@@ -609,8 +611,6 @@ local button_skin_new = {}
 for i = 1, #config.newskins do
 	button_skin_new[i] = imgui.new.bool(false)
 end
-
-local index = 0
 
 local main_frame = imgui.OnFrame(
     function() return menu.alpha > 0.00 end,
@@ -1190,6 +1190,8 @@ function playanimationNow(ped, ifp, anim, loop, freeze)
 	end
 end
 
+local index = 0
+
 function imgui.PedFuncs(handle, addr_bool)
 	if lpedfuncs then
 		if pedfuncs.Ext_GetPedRemap(getCharPointer(handle), index) <= -1 then
@@ -1201,9 +1203,9 @@ function imgui.PedFuncs(handle, addr_bool)
 		imgui.SameLine()
 		imgui.SetCursorPosY(imgui.GetCursorPosY() - 4)
 		if imgui.Button("/\\", imgui.ImVec2(25, 25)) then
-			if index >= 0 and index <= 8 then
+			if index >= 0 and index <= 7 then
 				index = index + 1
-				if index <= 0 or index > 8 then
+				if index <= 0 or index > 7 then
 					index = 0
 				end
 			end
@@ -1219,9 +1221,9 @@ function imgui.PedFuncs(handle, addr_bool)
 		end
 		imgui.SameLine()
 		if imgui.Button("\\/", imgui.ImVec2(25, 25)) then
-			if index >= 0 and index <= 8 then
+			if index >= 0 and index <= 7 then
 				index = index - 1
-				if index <= 0 or index > 8 then
+				if index <= 0 or index > 7 then
 					index = 0
 				end
 			end
